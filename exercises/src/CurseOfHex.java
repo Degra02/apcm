@@ -1,4 +1,3 @@
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -23,8 +22,10 @@ public class CurseOfHex {
         return data;
     }
 
-    private String breakCurseOfHex(String input) {
-        byte[] bytes = hexStringToByteArray(input);
+    public record DecodedData(boolean LE, boolean rightRot, int rotation, int M32, int length, List<Integer> encodedValues) {}
+
+    public static DecodedData parseHeader(String hexString) {
+        byte[] bytes = hexStringToByteArray(hexString);
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         byte flags = buffer.get();
         boolean LE = (flags & 0x01) != 0;
@@ -41,17 +42,26 @@ public class CurseOfHex {
         }
         int length = buffer.getInt();
 
-        List<Byte> decoded = new ArrayList<>();
+        List<Integer> encodedValues = new ArrayList<>();
         while(buffer.remaining() >= 4) {
-            int encodedVal = buffer.getInt();
-            encodedVal = rightRot ?
-                    Integer.rotateLeft(encodedVal, rotation)
-                    : Integer.rotateRight(encodedVal, rotation);
+            encodedValues.add(buffer.getInt());
+        }
 
-            int decodedVal = encodedVal ^ M32;
+        return new DecodedData(LE, rightRot, rotation, M32, length, encodedValues);
+    }
+
+    private String breakCurseOfHex(String input) {
+        DecodedData data = parseHeader(input);
+        List<Byte> decoded = new ArrayList<>();
+        for (int encodedVal : data.encodedValues) {
+            int decodedVal = data.rightRot ?
+                    Integer.rotateLeft(encodedVal, data.rotation)
+                    : Integer.rotateRight(encodedVal, data.rotation);
+            decodedVal ^= data.M32;
+
             ByteBuffer decodedBuffer = ByteBuffer
                     .allocate(4)
-                    .order(LE ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+                    .order(data.LE ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
             decodedBuffer.putInt(decodedVal);
 
             decodedBuffer.flip();
@@ -65,7 +75,7 @@ public class CurseOfHex {
             decodedArray[i] = decoded.get(i);
         }
 
-        byte[] actualPayload = Arrays.copyOf(decodedArray, length);
+        byte[] actualPayload = Arrays.copyOf(decodedArray, data.length);
         return new String(actualPayload, StandardCharsets.US_ASCII);
     }
 }
