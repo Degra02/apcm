@@ -135,6 +135,9 @@ _Avalanche effect_
 
 === After DES: AES
 
+
+
+
 == Stream Ciphers
 Takes bits or bytes as input \
 Were used for VOIP or Video
