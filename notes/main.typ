@@ -12,7 +12,55 @@
 
 = Hashing
 
+#showybox(
+  shadow: (
+    color: black.lighten(70%),
+    offset: 3pt
+  ),
+  frame: (
+    title-color: red.darken(50%),
+    border-color: black,
+    body-color: red.lighten(80%)
+  ),
+  title: "One-way Function"
+)[
+Function that is easy to compute on every input, but hard to invert given the image of a random input
+]
 
+The existence of such one-way functions is still an open conjecture.
+
+== Hash functions
+A hash function is secure if:
+- it is *strictly one-way*, it lets us compute the digest of a message, but does not let us figure out a message for a given digest (even very short).
+- it is *computationallu infeasible to find collisions*, i.e. construct messages whose digest would equal a specified value.
+
+== MERKLE
+
+The input message is partitioned into _t_ number of bit blocks, each of size _n_ bits.\
+If necessary, the final block is padded so that it is of the same length as others.
+
+#figure(
+  image("assets/merkl.png", width: 80%),
+  caption: [Merkle],
+) <fig-merkl>
+
+Each stage of the Merkle structure takes two inputs
+- the n-bit block of the input message meant for that stage
+- the m-bit output of the previous stage
+For the m-bit input, the first stage is supplied with a special m-bit pattern called the *Initialization Vector* (IV).\
+The function _f_ that processes the two inputs, one _n_ bits long and the other _m_ bits
+long, to produce an _m-bit_ output is usually called *compression function*.
+- This is so since $n > m$, i.e. the output of the function f is shorter than the length of the input message segment
+
+The compression function _f_ may involve multiple rounds of processing of the two inputs to produce the output. The precise nature of _f_ depends on what hash algorithm is being implemented
+
+== SHA (Secure Hash Algo)
+SHA refers to a family of NIST-approved cryptographic hash functions.
+
+#figure(
+  image("assets/sha_family.png", width: 80%),
+  caption: [SHA hash functions],
+) <fig-sha_family>
 
 = Symmetric Encryption
 An attacker does not extract any meaning from the ciphertext $arrow$ random sequence of bits
@@ -70,7 +118,7 @@ This stream *must be random*
 The ciphertext can become predictable if the key is not random enough
 
 The plaintext we are interested in exchanging usually contains different structuring inside, e.g.
-encrypting a transaction with different fields
+encrypting a transaction with different fields:
 
 $ "Key is reused no more than:"  m/n > 1  "times" $
 
@@ -287,6 +335,12 @@ _Key permutation 2_
 _Avalanche effect_
 - if one changes one of the 64 bits in the input data block, it affects *34 bits of the ciphertext block*
 - if one changes one bit of the encryption key, on the average *35 bits of the ciphertext are affected*
+]
+
+#note[
+  56-bit encryption key means *key space* of size $2^56 ≈ 7.2 * 10^16$.
+
+  DES was broken in 1999.
 ]
 
 === After DES: AES
