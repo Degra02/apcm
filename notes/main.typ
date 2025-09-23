@@ -218,9 +218,21 @@ Expansion permutation step
   - So after all the substitutions, we again end up with a 32-bit word
 
 
+#figure(
+  image("assets/sboxes.png", width: 80%),
+  caption: [Substitution with S-boxes],
+) <fig-sboxes>
 
-Why exactly those numbers in the *Feistel S-Boxes*? 
-It was an iterative process that ends up in those specific numbers, experience of the designers.
+#tip[
+  Why exactly those numbers in the *Feistel S-Boxes*?\
+  It was an iterative process that ends up in those specific numbers, experience of the designers.
+]
+
+
+#figure(
+  image("assets/indexing_sboxes.png", width: 80%),
+  caption: [Indexing the S-boxes],
+) <fig-indexing_sboxes>
 
 
 === Key Scheduling
