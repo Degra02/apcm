@@ -17,10 +17,11 @@
   ),
   title: "One-way Function"
 )[
-Function that is easy to compute on every input, but hard to invert given the image of a random input
-]
+Function that is easy to compute on every input, but hard to invert given the image of a random input.
 
 The existence of such one-way functions is still an open conjecture.
+]
+
 
 == Hash functions
 A hash function is secure if:
