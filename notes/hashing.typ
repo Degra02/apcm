@@ -54,3 +54,55 @@ SHA refers to a family of NIST-approved cryptographic hash functions.
   image("assets/sha_family.png", width: 80%),
   caption: [SHA hash functions],
 ) <fig-sha_family>
+
+The last column refers to how many messages would have to be generated before two can be found with the same digest with a probability of 0.5.
+
+For a secure hash algorithm that has no security holes and produces n-bit digests, one would need to come up with $2^(n/2)$ messages to discover a collision with a probability of 0.5.\
+This is why the entries in the last column are half in size compared to the entries in the *Message Digest Size*.
+
+=== SHA-1
+SHA-1 is a successor to MD5 that was a widely used hash function
+- There still exist many legacy applications that use MD5 for calculating digests
+- This despite the fact that its usage has been deprecated as it is considered insecure
+
+SHA-1 was cracked theoretically in the year 2005 by two different research groups. In one of these two demonstrations, it was shown how it is possible to come up with a collision for SHA-1 within a space of size 2^69 only.\ This is much less than the security level of 2^80 associated with this hash function.
+
+#note[
+  A 2013 attack breaks MD5 collision resistance in 2^18 time.\ This attack runs in less than a second on a regular computer.
+In 2017, SHA-1 was broken in practice...
+Full details at https://shattered.io/
+]
+
+=== Compression function
+- $W_t$ contains a word of 4 bytes derived from the message block of 512 bits, i.e. 64 bytes.
+- $K_t$ contains words of 4 bytes from a defined array of 64 constants.
+
+The blue components perform the operations:
+$ "Ch"(E,F,G)=(E and F) xor (not E and G) $
+$ "Ma"(A,B,C) = (A and B) xor (A and C) xor (B and C) $
+$ epsilon_0(A) = (A >>> 2) xor (A >>> 13) xor (A >>> 22)  $
+$ epsilon_1(E) = (E >>> 6)xor (E >>> 11) xor (E >>> 25) $
+
+The red operator is addition modulo $2^32$. The compression function is invoked in 64 rounds.
+In the first round, the registers A, B, ..., H are initialized with constants
+
+#important[
+  This function contributes to performing *diffusion*.
+]
+
+#figure(
+  image("assets/compression_sha1.png", width: 50%),
+  caption: [Compression Function in SHA-1],
+) <fig-compression_sha1>
+
+
+== Application of Hash Functions
+
+Compare possibly huge messages very efficiently by
+- compute small digest
+- compare digests in place of original messages
+Under which assumptions this method can work?\
+How does this relate to one property of the CIA triad?\
+Is it enough to produce digests to check that the property is preserved or do you need to protect them in some way?\
+If you need protection, which kind of protection? With the protection, do you obtain something more if the protection is properly done?\
+

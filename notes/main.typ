@@ -11,5 +11,7 @@
 
 
 #include "hashing.typ"
+#pagebreak()
 
 #include "symmetric.typ"
+#pagebreak()
