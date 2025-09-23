@@ -22,7 +22,7 @@ public class CurseOfHex {
         return data;
     }
 
-    public record DecodedData(boolean LE, boolean rightRot, int rotation, int M32, int length, List<Integer> encodedValues) {}
+    public record DecodedData(boolean LE, boolean rightRot, int rotAmount, int M32, int length, List<Integer> encodedValues) {}
 
     public static DecodedData parseHeader(String hexString) {
         byte[] bytes = hexStringToByteArray(hexString);
@@ -55,8 +55,8 @@ public class CurseOfHex {
         List<Byte> decoded = new ArrayList<>();
         for (int encodedVal : data.encodedValues) {
             int decodedVal = data.rightRot ?
-                    Integer.rotateLeft(encodedVal, data.rotation)
-                    : Integer.rotateRight(encodedVal, data.rotation);
+                    Integer.rotateLeft(encodedVal, data.rotAmount)
+                    : Integer.rotateRight(encodedVal, data.rotAmount);
             decodedVal ^= data.M32;
 
             ByteBuffer decodedBuffer = ByteBuffer
