@@ -235,16 +235,61 @@ Expansion permutation step
 ) <fig-indexing_sboxes>
 
 
-=== Key Scheduling
+==== Key Scheduling
+The 56-bit encryption key is represented by 8 bytes, with the least significant bit of each byte used as a parity bit
+- The relevant 56 bits are subject to a permutation before any round keys are generated (see @fig-initial_permutation)
+- This is called Key Permutation 1
 
-=== Diffusion & Confusion in DES
+The bit indexing is based on using the range 0-63 for addressing the bit positions in an 8-byte bit pattern in which the last bit of each byte is used as a parity bit.
+- Each row has only 7 positions
+
+The table specifies that:
+- the 0th bit of the output will be the 56th bit of the input (in a 64 bit representation of the 56-bit encryption key)
+- the 1st bit of the output will be the 48th bit of the input,
+- ... and so on, until we have for the 55th bit of the output the 3rd bit of the input
+
+#figure(
+  image("assets/initial_permutation.png", width: 40%),
+  caption: [Initial permutation],
+) <fig-initial_permutation>
+
+At the beginning of each round:
+- divide the 56 key bits into two 28 bit halves
+- circularly shift to the left each half by one or two bits, depending on the round, according to a table.
+
+#note[This is to ensure that each bit of the original encryption key is used in ~14 of 16 rounds]
+
+For generating the round key, we glue together the two halves and apply a *56 bit to 48 bit contracting permutation* (this is referred to as Permutation Choice 2) to the joined bit pattern
+- The resulting 48 bits constitute the round key
+
+_Key permutation 2_
+- The bit addressing now spans the 0 through 55 index values for the 56 bit key. Out of this index range, the permutation shown above retains only 48 bits for the round key. Since there are only six rows and there are 8 positions in each row, the output will consist of 48 bits.
+- As for the permutation tables above, what is shown on @fig-key_permutation2 is not a table, in the sense that the rows and the columns do not carry any special and separate meanings
+- The permutation order for the bits is given by reading the entries shown from the upper left corner to the lower right corner
+
+#figure(
+  image("assets/key_permutation2.png", width: 50%),
+  caption: [Key Permutation 2],
+) <fig-key_permutation2>
+
+#showybox(
+  shadow: (
+    color: black.lighten(70%),
+    offset: 3pt
+  ),
+  frame: (
+    title-color: red.darken(50%),
+    border-color: black,
+    body-color: red.lighten(80%)
+  ),
+  title: "Diffusion & Confusion in DES"
+)[
 _Avalanche effect_
 - if one changes one of the 64 bits in the input data block, it affects *34 bits of the ciphertext block*
 - if one changes one bit of the encryption key, on the average *35 bits of the ciphertext are affected*
+]
 
 === After DES: AES
-
-
 
 
 == Stream Ciphers

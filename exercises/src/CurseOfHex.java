@@ -8,11 +8,11 @@ import java.util.List;
 public class CurseOfHex {
     public static void main(String[] args) {
         String cipher = "0305A1B2460000006F9F37A7AED6264E173E9E6E266E770EF6374EA6F6D726BEF6DF96561F06766E26E6F6CF4EBEF63776EE9EB677A6F66F4EBEF6379E5E8E8EF6DF96367FEEB66E7716266EE6960DE5";
-        String plain = new CurseOfHex().breakCurseOfHex(cipher);
+        String plain = CurseOfHex.breakCurseOfHex(cipher);
         System.out.println(plain);
     }
 
-    private static byte[] hexStringToByteArray(String s) {
+    public static byte[] hexStringToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
@@ -50,9 +50,11 @@ public class CurseOfHex {
         return new DecodedData(LE, rightRot, rotation, M32, length, encodedValues);
     }
 
-    private String breakCurseOfHex(String input) {
+    public static String breakCurseOfHex(String input) {
         DecodedData data = parseHeader(input);
         List<Byte> decoded = new ArrayList<>();
+        ByteOrder byteOrder = data.LE ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+
         for (int encodedVal : data.encodedValues) {
             int decodedVal = data.rightRot ?
                     Integer.rotateLeft(encodedVal, data.rotAmount)
@@ -61,7 +63,7 @@ public class CurseOfHex {
 
             ByteBuffer decodedBuffer = ByteBuffer
                     .allocate(4)
-                    .order(data.LE ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+                    .order(byteOrder);
             decodedBuffer.putInt(decodedVal);
 
             decodedBuffer.flip();
