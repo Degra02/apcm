@@ -161,10 +161,27 @@ A good P-box has the property that *the output bits of any S-box are distributed
 The result of this S-box - P-box transformation is *XORed* with a Key derived from the original encryption key
 ]
 
-=== Feistel structure
-uses same basic algorithm for bot henc and dec
+=== DES
 
-Consista of multiple rounds of processing of the plaintext, with each round consisting of a *substitution* step *followed by a permutation* step.
+Adopted by NIST in 1977 $arrow$ now considered broken.\
+Uses a *56-bit encryption key*.\
+Uses the *Feistel cipher structure* with 16 rounds of processing.
+
+#showybox(
+  shadow: (
+    color: black.lighten(70%),
+    offset: 3pt
+  ),
+  frame: (
+    title-color: black.lighten(10%),
+    border-color: black,
+    body-color: black.lighten(90%)
+  ),
+  title: "Feistel structure",
+)[
+Uses same basic algorithm for bot henc and dec
+
+Consists of multiple rounds of processing of the plaintext, with each round consisting of a *substitution* step *followed by a permutation* step.
 
 In each round:
 - right half of the block, R, goes through unchanged
@@ -172,19 +189,34 @@ In each round:
 - operation carried out on the left L is referred to as the *Fesitel function F*
 - the permutation step consists of *swapping* the modified *L and R*
 
-For DES, number _n_ of rounds is 16
-
 This permutation is one of the easiest to implement in hardware -> *Circular Shift Register*
+]
 
-==== Fesitel Expansion
-the 32-bit right half of the 64-bit input data is expanded into a 48-bit block
+#note[For DES, number _n_ of rounds is 16]
+
+
+=== Fesitel Function
+The 32-bit right half of the 64-bit input data is expanded into a 48-bit block
+
+#figure(
+  rect(image("assets/feistel_func.png", width: 80%)),
+  caption: [Feistel Function schema],
+) <fig-feistel_func>
 
 Expansion permutation step
 1. divide the 32-bit block into eight 4-bit words
-2. attach an additional bit on the left to each 4-bit word that is the last bit of the previous 4-bit word
-3. attach an additional bit to the right of each 4-bit word that is the beginning bit of the next 4-bit word
++ attach an additional bit on the left to each 4-bit word that is the last bit of the previous 4-bit word
++ attach an additional bit to the right of each 4-bit word that is the beginning bit of the next 4-bit word
 
-The 56-bit key is divided into two halves, each half shifted separately, and the combined 56-bit key permuted/contracted
++ The 56-bit key is divided into two halves, each half shifted separately, and the combined 56-bit key permuted/contracted
+
++ The 48 bits of the expanded output produced by the Expansion permutation step are xor-ed with the round key
+  - This is called key mixing
++ The output produced is broken into eight 6- bit words
++ Each six-bit word goes through a substitution step; its replacement is a 4-bit word
+  - The substitution is carried out with an S-box
+  - So after all the substitutions, we again end up with a 32-bit word
+
 
 
 Why exactly those numbers in the *Feistel S-Boxes*? 
