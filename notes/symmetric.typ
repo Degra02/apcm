@@ -294,9 +294,10 @@ The trusted computing base (TCB) of a computer system is the set of all hardware
 
 
 == Stream Ciphers
+Takes bits or bytes as input \
+Were used for VOIP or Video
 
 Base idea: have blocks of 1 bit.
-
 
 #figure(
   image("assets/stream_ciphers.png", width: 70%),
@@ -329,8 +330,41 @@ The period of use of a key depends on the actual computing capabilities of attac
 This complicates the use of symmetric ciphers, since we need to change the keys on *both* ends of the channel $arrow$ Exchange a new key!
 
 
+#important[
+  Move the problem of encryption (very easy) to generating the random bits sequence that builds the keys
+]
 
-Takes bits or bytes as input \
-Were used for VOIP or Video
+=== Salsa20
+Modern example of a stream cipher.
+
+
+#figure(
+  image("assets/salsa20_algo.png", width: 80%),
+  caption: [Salsa20 Code],
+) <fig-salsa20_algo>
+
+#note[
+Costant Time Execution is important in all cryptographic implementations.
+]
+
+In Salsa20 there are no branches, so Timing Attacks are not possible (in this implementation).
+Moreover, there is no dependence on the values of the key on any branches or loops (fixed loops).\
+This becomes very relevant when implementing a certain crypto-algorithm.
+
+In reality, it's a hybrid between stream ciphers and block ciphers. This is mainly because in programming languages the smallest unit that can be operated are bytes (or groups of bytes).
+
+==== Main Issues
+Stream ciphers are malleable $arrow$ violation of integrity.
+
+
+=== Poly1305
+Poly1305 is a universal hash function that allows for selecting a hash function at random from a family of hash functions with a certain mathematical. \
+This guarantees a low number of collisions in expectation, even if the data is chosen by an
+adversary.\
+It can be used as a one-time message authentication code to authenticate a single message using a secret key shared between sender and recipient similar to the way that a one-time pad can be used to conceal the content of a single message using a secret key shared between sender and recipient.\
+
+It can be used in combination with symmetric key ciphers, such as AES or Salsa20, to implement authenticated encryption and decryption by using symmetric key encryption.
+
+
 
 
