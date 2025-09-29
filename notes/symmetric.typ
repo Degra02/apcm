@@ -128,8 +128,9 @@ Decryption done by reversing the process
   
   Not just a permutation of the bits:\
   A good S-Box will have the property that changing one input bit will change half of the output bits, and each output bit will depend on every input bit
-
 ]
+
+
 
 #showybox(
   shadow: (
@@ -288,7 +289,47 @@ _Avalanche effect_
 === After DES: AES
 
 
+=== Trusted Computing Base
+The trusted computing base (TCB) of a computer system is the set of all hardware, firmware, and/or software components that are critical to its security, in the sense that bugs or vulnerabilities occurring inside the TCB might jeopardize the security properties of the entire system. By contrast, parts of a computer system that lie outside the TCB must not be able to misbehave in a way that would leak any more privileges than are granted to them in accordance to the system's security policy.
+
+
 == Stream Ciphers
+
+Base idea: have blocks of 1 bit.
+
+
+#figure(
+  image("assets/stream_ciphers.png", width: 70%),
+  caption: [Stream Ciphers],
+) <fig-stream_ciphers>
+
+The XOR operation, again, is very fast and can be easily inverted.
+The idea goes back to *Shannon Theorem*./
+The cipher that he defined has two properties:
++ The keys are perfectly random
++ For any pair $(m,c)$ of plaintext-ciphertexts, there is one and only one key k such that
+$ c = phi(m,k) $
+
+Two issues:
++ Dimension of the key should be the same size of the plaintext
++ 
+
+
+Approximate Shannon's theorem to a pseudo-random key, since it still has a periodicity.
+#figure(
+  image("assets/stream_cipher_key.png", width: 80%),
+  caption: [Stream Cipher Key Gen],
+) <fig-stream_cipher_key>
+
+The other approximation regarding the second principle, as the key is not used just once to encrypt one single plaintext./
+After some time, the key is replaced but not for every message that I need to encrypt.
+
+The period of use of a key depends on the actual computing capabilities of attackers, since the basic *thread model* to consider is a brute-force attack.
+
+This complicates the use of symmetric ciphers, since we need to change the keys on *both* ends of the channel $arrow$ Exchange a new key!
+
+
+
 Takes bits or bytes as input \
 Were used for VOIP or Video
 

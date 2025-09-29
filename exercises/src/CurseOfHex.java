@@ -5,9 +5,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Group Members: Filippo De Grandi
+ * Cool Name: okmel'erodimenticato
+ */
 public class CurseOfHex {
 
-    public record DecodedData(boolean LE, boolean rightRot, int rotAmount, int M32, int length, List<Integer> encodedValues) {}
+    public record DecodedData(
+            boolean LE,
+            boolean rightRot,
+            int rotAmount,
+            int M32,
+            int length,
+            List<Integer> encodedValues
+    ) {}
 
     public static DecodedData parseHeader(String hexString) {
         byte[] bytes = hexStringToByteArray(hexString);
@@ -45,6 +56,7 @@ public class CurseOfHex {
         return data;
     }
 
+    // P = (rotate -1 (E.toUInt(bit0), rotation_direction, rotation_amount) ^ M32).toBytes(bit0)
     public static String breakCurseOfHex(String input) {
         DecodedData data = parseHeader(input);
         List<Byte> decoded = new ArrayList<>();
