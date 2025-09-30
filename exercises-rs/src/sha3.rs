@@ -7,47 +7,9 @@
 
 use std::fmt::{Display, LowerHex};
 
-enum ShaVariant {
-    SHA3_224,
-    SHA3_256,
-    SHA3_384,
-    SHA3_512,
-}
 
-impl ShaVariant {
-    /// Returns rate r, capacity c and output length for the given SHA-3 variant.
-    pub fn parameters(&self) -> (usize, usize, usize) {
-        match self {
-            ShaVariant::SHA3_224 => (1152, 448, 224),
-            ShaVariant::SHA3_256 => (1088, 512, 256),
-            ShaVariant::SHA3_384 => (832, 768, 384),
-            ShaVariant::SHA3_512 => (576, 1024, 512),
-        }
-    }
-}
-
-struct SHA3(Keccak);
-
-impl SHA3 {
-    pub fn new(variant: ShaVariant) -> Self {
-        let (rate, capacity, output_length) = variant.parameters();
-        SHA3(Keccak::new(rate/8, capacity/8, output_length/8))
-    }
-
-    pub fn update(&mut self, input: &[u8]) {
-        self.0.absorb(input);
-    }
-
-    pub fn finalize(&mut self) -> Vec<u8> {
-        self.0.squeeze()
-    }
-
-    pub fn reset(&mut self) {
-        self.0.reset();
-    }
-}
-
-struct Digest(Vec<u8>);
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Digest(Vec<u8>);
 
 impl Digest {
     pub fn as_bytes(&self) -> &[u8] {
@@ -70,6 +32,50 @@ impl LowerHex for Digest {
             write!(f, "{byte:02x}")?;
         }
         Ok(())
+    }
+}
+
+pub enum ShaVariant {
+    SHA3_224,
+    SHA3_256,
+    SHA3_384,
+    SHA3_512,
+}
+
+impl ShaVariant {
+    /// Returns rate r, capacity c and output length for the given SHA-3 variant.
+    pub fn parameters(&self) -> (usize, usize, usize) {
+        match self {
+            ShaVariant::SHA3_224 => (1152, 448, 224),
+            ShaVariant::SHA3_256 => (1088, 512, 256),
+            ShaVariant::SHA3_384 => (832, 768, 384),
+            ShaVariant::SHA3_512 => (576, 1024, 512),
+        }
+    }
+}
+
+pub struct SHA3(Keccak);
+
+impl SHA3 {
+    pub fn new(variant: ShaVariant) -> Self {
+        let (rate, capacity, output_length) = variant.parameters();
+        SHA3(Keccak::new(rate/8, capacity/8, output_length/8))
+    }
+
+    pub fn update(&mut self, input: &[u8]) {
+        self.0.absorb(input);
+    }
+
+    pub fn finalize(&mut self) -> Digest {
+        Digest(self.0.squeeze())
+    }
+
+    pub fn reset(&mut self) {
+        self.0.reset();
+    }
+
+    pub fn get_state(&self) -> &[u64; 25] {
+        &self.0.state
     }
 }
 
@@ -135,8 +141,6 @@ impl Keccak {
             self.buffer.push(0x00);
         }
 
-        // let last_idx = self.buffer.len() - 1;
-        // self.buffer[last_idx] ^= 0x80;
         if let Some(last) = self.buffer.last_mut() {
             *last ^= 0x80;
         }
@@ -144,21 +148,6 @@ impl Keccak {
         // absorbing the final block
         let final_block: Vec<u8> = self.buffer.drain(..).collect();
         self.absorb_block(&final_block);
-
-        // let mut output = Vec::new();
-        // while output.len() < self.output_length {
-        //     let num_lanes = self.rate / 8;
-        //     for i in 0..num_lanes {
-        //         let lane_bytes = self.state[i].to_le_bytes();
-        //         for &byte in &lane_bytes {
-        //             output.push(byte);
-        //             if output.len() >= self.output_length { return output; }
-        //         }
-        //     }
-        //
-        //     // if more output is needed
-        //     self.keccak_f();
-        // }
 
 
         let mut output = Vec::new();
@@ -239,16 +228,6 @@ impl Keccak {
             }
         }
         self.state = b;
-
-        // let mut b = [0u64; 25];
-        // for x in 0..5 {
-        //     for y in 0..5 {
-        //         let x_prime = (2 * x + 3 * y) % 5;
-        //         // target index is x' + 5*y
-        //         b[x_prime + 5 * y] = self.state[x + 5 * y].rotate_left(rotation_offsets[x][y]);
-        //     }
-        // }
-        // self.state = b;
     }
 
     fn chi(&mut self) {
@@ -268,17 +247,6 @@ impl Keccak {
 
 
 
-
-#[test]
-fn last_slice_of_light() {
-    let to_encode: &str = "FLAG{the_curse_of_the_hx_is_broken_the_door_of_the_crypt_is_now_open}";
-    let mut hasher = SHA3::new(ShaVariant::SHA3_224);
-    hasher.update(to_encode.as_bytes());
-    let digest = hasher.finalize();
-
-}
-
-
 #[test]
 fn kat_sha3_224() {
     let to_encode: &str = "";
@@ -286,76 +254,60 @@ fn kat_sha3_224() {
     hasher.update(to_encode.as_bytes());
     let digest = hasher.finalize();
 
-    let hex_digest = digest.iter()
-        .map(|b| format!("{b:02x}"))
-        .collect::<String>();
 
     // empty string
     assert_eq!(
-        hex_digest,
+        digest.to_string(),
         "6b4e03423667dbb73b6e15454f0eb1abd4597f9a1b078e3f5b5a6bc7"
     );
+    hasher.reset();
 
     // "abc" string
     let to_encode: &str = "abc";
-    hasher.reset();
     hasher.update(to_encode.as_bytes());
     let digest = hasher.finalize();
 
-    let hex_digest = digest.iter()
-        .map(|b| format!("{b:02x}"))
-        .collect::<String>();
     assert_eq!(
-        hex_digest,
+        digest.to_string(),
         "e642824c3f8cf24ad09234ee7d3c766fc9a3a5168d0c94ad73b46fdf"
     );
 }
 
 #[test]
 fn kat_sha3_256() {
-    let to_encode: &str = "";
+    let to_encode: &str = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
     let mut hasher = SHA3::new(ShaVariant::SHA3_256);
     hasher.update(to_encode.as_bytes());
     let digest = hasher.finalize();
 
-    let hex_digest = digest.iter()
-        .map(|b| format!("{b:02x}"))
-        .collect::<String>();
-
     assert_eq!(
-        hex_digest,
-        "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a"
+        digest.to_string(),
+        "41c0dba2a9d6240849100376a8235e2c82e1b9998a999e21db32dd97496d3376"
     );
 }
 
 #[test]
 fn kat_sha3_384() {
-    let to_encode: &str = "";
+    let to_encode: &str = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
     let mut hasher = SHA3::new(ShaVariant::SHA3_384);
     hasher.update(to_encode.as_bytes());
     let digest = hasher.finalize();
-    let hex_digest = digest.iter()
-        .map(|b| format!("{b:02x}"))
-        .collect::<String>();
 
     assert_eq!(
-        hex_digest,
-        "0c63a75b845e4f7d01107d852e4c2485c51a50aaaa94fc61995e71bbee983a2ac3713831264adb47fb6bd1e058d5f004"
+        digest.to_string(),
+        "79407d3b5916b59c3e30b09822974791c313fb9ecc849e406f23592d04f625dc8c709b98b43b3852b337216179aa7fc7"
     );
 }
 
 #[test]
 fn kat_sha3_512() {
-    let to_encode: &str = "";
+    let to_encode: &str = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
     let mut hasher = SHA3::new(ShaVariant::SHA3_512);
     hasher.update(to_encode.as_bytes());
     let digest = hasher.finalize();
-    let hex_digest = digest.iter()
-        .map(|b| format!("{b:02x}"))
-        .collect::<String>();
 
     assert_eq!(
-        hex_digest,
-        "a69f73cca23a9ac5c8b567dc185a756e97c982164fe25859e0d1dcc1475c80a615b2123af1f5f94c11e3e9402c3ac558f500199d95b6d3e301758586281dcd26"
+        digest.to_string(),
+        "afebb2ef542e6579c50cad06d2e578f9f8dd6881d7dc824d26360feebf18a4fa73e3261122948efcfd492e74e82e2189ed0fb440d187f382270cb455f21dd185"
     );
 }
