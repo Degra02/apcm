@@ -1,3 +1,19 @@
+//! # Last Slice Of Light
+//! Author: Filippo De Grandi
+//! Group: questavoltamelosonoricordato
+//!
+//! How to run:
+//! ```
+//! cargo run
+//! ```
+//!
+//! The KAT test can be run with:
+//! ```
+//! cargo test -- --nocapture
+//! ```
+//!
+
+
 pub mod sha3;
 
 use sha3::{SHA3, ShaVariant};
