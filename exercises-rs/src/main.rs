@@ -9,5 +9,5 @@ fn main() {
 
     let digest = hasher.finalize();
 
-    println!("SHA3-256: {digest}");
+    println!("\nSHA3-256: {digest}");
 }
