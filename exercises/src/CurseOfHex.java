@@ -3,6 +3,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.List;
 
 /**
@@ -21,7 +22,10 @@ public class CurseOfHex {
     ) {}
 
     public static DecodedData parseHeader(String hexString) {
-        byte[] bytes = hexStringToByteArray(hexString);
+        HexFormat hex = HexFormat.of();
+        hex.parseHex(hexString);
+        byte[] bytes = hex.parseHex(hexString);
+
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         byte flags = buffer.get();
         boolean LE = (flags & 0x01) != 0;
@@ -44,16 +48,6 @@ public class CurseOfHex {
         }
 
         return new DecodedData(LE, rightRot, rotation, M32, length, encodedValues);
-    }
-
-    public static byte[] hexStringToByteArray(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i+1), 16));
-        }
-        return data;
     }
 
     // P = (rotate -1 (E.toUInt(bit0), rotation_direction, rotation_amount) ^ M32).toBytes(bit0)
