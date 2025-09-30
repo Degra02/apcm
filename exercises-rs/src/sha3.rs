@@ -74,10 +74,6 @@ impl SHA3 {
     pub fn reset(&mut self) {
         self.0.reset();
     }
-
-    pub fn get_state(&self) -> &[u64; 25] {
-        &self.0.state
-    }
 }
 
 const RHO: [u64; 24] = [
@@ -123,6 +119,18 @@ impl Keccak {
     pub fn reset(&mut self) {
         self.state = [0u64; 25];
         self.buffer.clear();
+    }
+
+    fn print_last_slice(&self) {
+        println!("Last slice (z = 63) — 1 = safe tile:");
+        for y in 0..5 {
+            for x in 0..5 {
+                let lane = self.state[x + 5 * y];
+                let bit = ((lane >> 63) & 0x1) as u8;
+                print!("{bit}");
+            }
+            println!();
+        }
     }
 
     /// Absorb function, can assume full bytes input
@@ -197,6 +205,11 @@ impl Keccak {
         for round in 0..24 {
             self.theta();
             self.rho_pi();
+
+            if round == 23 {
+                self.print_last_slice();
+            }
+
             self.chi();
             self.iota(round);
         }

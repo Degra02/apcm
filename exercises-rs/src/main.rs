@@ -8,8 +8,6 @@ fn main() {
     hasher.update(to_encode.as_bytes());
 
     let digest = hasher.finalize();
-    let state = hasher.get_state();
 
     println!("SHA3-256: {digest}");
-    println!("State: {state:?}");
 }
