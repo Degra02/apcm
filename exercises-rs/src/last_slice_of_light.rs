@@ -85,13 +85,81 @@ impl Keccak {
     /// Absorb function, can assume full bytes input
     pub fn absorb(&mut self, input: &[u8]) {
         self.buffer.extend_from_slice(input);
+        let block_size = self.rate;
 
-        
+        while self.buffer.len() >= block_size {
+            let block = self.buffer.drain(..self.rate).collect::<Vec<u8>>();
+            self.absorb_block(&block);
+        }
+
+        // // Padding
+        // let mut padded_block = vec![0u8; block_size];
+        // let remaining = self.buffer.len();
+        // padded_block[..remaining].copy_from_slice(&self.buffer);
+        // padded_block[remaining] ^= 0x06; // Domain separation for SHA-3
+        // padded_block[block_size - 1] ^= 0x80; // Padding
+        // self.absorb_block(&padded_block);
+        // self.buffer.clear();
     }
 
     pub fn squeeze(&mut self) -> Vec<u8> {
-        todo!()
+         // Domain separation for SHA-3
+        self.buffer.push(0x06);
+        while self.buffer.len() < self.rate {
+            self.buffer.push(0x00);
+        }
+
+        // let last_idx = self.buffer.len() - 1;
+        // self.buffer[last_idx] ^= 0x80;
+        if let Some(last) = self.buffer.last_mut() {
+            *last ^= 0x80;
+        }
+
+        // absorbing the final block
+        let final_block: Vec<u8> = self.buffer.drain(..).collect();
+        self.absorb_block(&final_block);
+
+
+        let mut output = Vec::new();
+        while output.len() < self.output_length {
+            // Extract up to rate bytes from the current state
+            for i in 0..(self.rate / 8) {  // All lanes in the rate portion
+                let lane_bytes = self.state[i].to_le_bytes();
+                for &byte in &lane_bytes {
+                    output.push(byte);
+                    if output.len() >= self.output_length {
+                        return output;  // Done, return immediately
+                    }
+                }
+            }
+
+            // Need more output, apply permutation
+            self.keccak_f();
+        }
+
+        output
     }
+
+    fn absorb_block(&mut self, block: &[u8]) {
+        self.xor_block(block);
+        self.keccak_f();
+    }
+
+    fn xor_block(&mut self, block: &[u8]) {
+        let mut chunks = block.chunks_exact(8);
+        for (s, chunk) in self.state.iter_mut().zip(&mut chunks) {
+            *s ^= u64::from_le_bytes(chunk.try_into().unwrap());
+        }
+
+        let remainder = chunks.remainder();
+        if !remainder.is_empty() {
+            let mut last_chunk = [0u8; 8];
+            last_chunk[..remainder.len()].copy_from_slice(remainder);
+            let n = block.len() / 8;
+            self.state[n] ^= u64::from_le_bytes(last_chunk);
+        }
+    }
+
 
     /// Keccak-f[1600] permutation
     fn keccak_f(&mut self) {
@@ -108,6 +176,7 @@ impl Keccak {
         for x in 0..5 {
             c[x] = self.state[x] ^ self.state[x + 5] ^ self.state[x + 10] ^ self.state[x + 15] ^ self.state[x + 20];
         }
+
 
         let mut d = [0u64; 5];
         for x in 0..5 {
@@ -152,4 +221,71 @@ impl Keccak {
 #[test]
 fn last_slice_of_light() {
     let to_encode: &str = "FLAG{the_curse_of_the_hx_is_broken_the_door_of_the_crypt_is_now_open}";
+    let mut hasher = SHA3::new(ShaVariant::SHA3_224);
+    hasher.update(to_encode.as_bytes());
+    let digest = hasher.finalize();
+
 }
+
+
+#[test]
+fn kat_sha224() {
+    let to_encode: &str = "";
+    let mut hasher = SHA3::new(ShaVariant::SHA3_224);
+    hasher.update(to_encode.as_bytes());
+    let digest = hasher.finalize();
+
+    let hex_digest = digest.iter()
+        .map(|b| format!("{b:02x}"))
+        .collect::<String>();
+
+    println!("Got: {hex_digest}");
+
+    assert_eq!(
+        hex_digest,
+        "6b4e03423667dbb73b6e15454f0eb1abd4597f9a1b078e3f5b5a6bc7"
+    );
+}
+
+#[test]
+fn kat_sha256() {
+    let to_encode: &str = "";
+    let mut hasher = SHA3::new(ShaVariant::SHA3_256);
+    hasher.update(to_encode.as_bytes());
+    let digest = hasher.finalize();
+
+    let hex_digest = digest.iter()
+        .map(|b| format!("{b:02x}"))
+        .collect::<String>();
+
+    println!("Got: {hex_digest}");
+
+    assert_eq!(
+        hex_digest,
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    );
+}
+
+#[test]
+fn kat_sha384() {
+    let to_encode: &str = "";
+    let mut hasher = SHA3::new(ShaVariant::SHA3_384);
+    hasher.update(to_encode.as_bytes());
+    let digest = hasher.finalize();
+    let hex_digest = digest.iter()
+        .map(|b| format!("{b:02x}"))
+        .collect::<String>();
+    println!("Got: {hex_digest}");
+    assert_eq!(
+        hex_digest,
+        "0c63a75b845e4f7d01107d852e4c2485c51a50aaaa94fc61995e71bbee983a2ac3713831264adb47fb6bd1e058d5f004"
+    );
+}
+
+
+
+
+
+
+
+
