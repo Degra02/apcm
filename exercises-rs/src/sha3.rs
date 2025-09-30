@@ -1,5 +1,6 @@
 #![allow(dead_code)]
-#![allow(non_upper_case_globals)]
+#![allow(renamed_and_removed_lints)]
+#![allow(needless_range_loop)]
 
 //! # Last Slice Of Light
 //! Author: Filippo De Grandi
@@ -79,7 +80,7 @@ impl SHA3 {
     }
 }
 
-const round_constants: [u64; 24] = [
+const RHO: [u64; 24] = [
     0x0000000000000001, 0x0000000000008082, 0x800000000000808A,
     0x8000000080008000, 0x000000000000808B, 0x0000000080000001,
     0x8000000080008081, 0x8000000000008009, 0x000000000000008A,
@@ -90,7 +91,7 @@ const round_constants: [u64; 24] = [
     0x8000000000008080, 0x0000000080000001, 0x8000000080008008,
 ];
 
-const rotation_offsets: [[u32; 5]; 5] = [
+const PI: [[u32; 5]; 5] = [
     [0, 36, 3, 41, 18],
     [1, 44, 10, 45, 2],
     [62, 6, 43, 15, 61],
@@ -224,7 +225,7 @@ impl Keccak {
         let mut b = [0u64; 25];
         for x in 0..5 {
             for y in 0..5 {
-                b[y + 5 * ((2 * x + 3 * y) % 5)] = self.state[x + 5 * y].rotate_left(rotation_offsets[x][y]);
+                b[y + 5 * ((2 * x + 3 * y) % 5)] = self.state[x + 5 * y].rotate_left(PI[x][y]);
             }
         }
         self.state = b;
@@ -241,7 +242,7 @@ impl Keccak {
     }
 
     fn iota(&mut self, round: usize) {
-        self.state[0] ^= round_constants[round];
+        self.state[0] ^= RHO[round];
     }
 }
 
