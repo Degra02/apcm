@@ -1,17 +1,17 @@
-//! # Last Slice Of Light
-//! Author: Filippo De Grandi
-//! Group: questavoltamelosonoricordato
-//!
-//! How to run the solution:
-//! ```
-//! cargo test solution -- --nocapture
-//! ```
-//!
-//! The KAT test can be run with:
-//! ```
-//! cargo test kat_all -- --nocapture
-//! ```
-//!
+// # Last Slice Of Light
+// Author: Filippo De Grandi
+// Group: :(){ :|: & };:
+//
+// How to run the solution:
+// ```
+// cargo test solution -- --nocapture
+// ```
+//
+// The KAT test can be run with:
+// ```
+// cargo test kat_all -- --nocapture
+// ```
+//
 
 pub mod sha3;
 
