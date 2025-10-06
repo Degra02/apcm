@@ -69,7 +69,7 @@ impl SHA3 {
     }
 }
 
-const RHO: [u64; 24] = [
+const RC: [u64; 24] = [
     0x0000000000000001,
     0x0000000000008082,
     0x800000000000808A,
@@ -96,7 +96,7 @@ const RHO: [u64; 24] = [
     0x8000000080008008,
 ];
 
-const PI: [[u32; 5]; 5] = [
+const RHO: [[u32; 5]; 5] = [
     [0, 36, 3, 41, 18],
     [1, 44, 10, 45, 2],
     [62, 6, 43, 15, 61],
@@ -154,7 +154,7 @@ impl Keccak {
         let block_size = self.rate;
 
         while self.buffer.len() >= block_size {
-            let block = self.buffer.drain(..self.rate).collect::<Vec<u8>>();
+            let block = self.buffer.drain(..block_size).collect::<Vec<u8>>();
             self.absorb_block(&block);
         }
     }
@@ -255,9 +255,10 @@ impl Keccak {
         let mut b = [0u64; 25];
         for x in 0..5 {
             for y in 0..5 {
-                b[y + 5 * ((2 * x + 3 * y) % 5)] = self.state[x + 5 * y].rotate_left(PI[x][y]);
+                b[y + 5 * ((2 * x + 3 * y) % 5)] = self.state[x + 5 * y].rotate_left(RHO[x][y]);
             }
         }
+
         self.state = b;
     }
 
@@ -273,6 +274,6 @@ impl Keccak {
     }
 
     fn iota(&mut self, round: usize) {
-        self.state[0] ^= RHO[round];
+        self.state[0] ^= RC[round];
     }
 }

@@ -32,6 +32,17 @@ mod tests {
     }
 
     #[test]
+    fn things() {
+        let string = "abc";
+        let mut hasher = SHA3::new(ShaVariant::SHA3_224);
+        hasher.update(string.as_bytes());
+        hasher.update(b"def");
+        let digest = hasher.finalize();
+
+        println!("\nSHA3-224: {digest}");
+    }
+
+    #[test]
     fn kat_all() {
         let strings_to_encode = [
             "",
