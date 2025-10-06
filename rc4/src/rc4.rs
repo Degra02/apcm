@@ -1,5 +1,4 @@
 use std::fmt::{Display, LowerHex};
-
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 #[derive(Debug, Clone)]
@@ -87,6 +86,7 @@ impl RC4 {
         Output(output)
     }
 
+    // should be more idiomatic (i.e. [Result] instead of .unwrap()) but I'm tired boss
     pub fn decrypt(key: &[u8], input: &[u8]) -> Output {
         let mut rc4 = RC4::new(key).unwrap();
         rc4.encrypt(input)

@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::rc4::{Output, RC4};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
@@ -18,10 +16,6 @@ impl RC4Attack {
             rc4,
             key: key.to_vec(),
         }
-    }
-
-    fn encrypt(&mut self, plaintext: &str) -> Vec<u8> {
-        self.rc4.encrypt(plaintext.as_bytes()).as_bytes().to_vec()
     }
 
     /// Given the original ciphertext, the original plaintext and the modified plaintext,
