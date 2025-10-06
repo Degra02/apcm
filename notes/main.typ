@@ -15,3 +15,6 @@
 
 #include "symmetric.typ"
 #pagebreak()
+
+#include "asymmetric.typ"
+#pagebreak()
