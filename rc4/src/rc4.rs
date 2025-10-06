@@ -76,14 +76,13 @@ impl RC4 {
     }
 
     pub fn encrypt(&mut self, input: &[u8]) -> Output {
-        let mut output = vec![];
-
-        for (input_val, key_byte) in input.iter().zip(&mut self.core) {
-            let res = input_val ^ key_byte;
-            output.push(res);
-        }
-
-        Output(output)
+        Output(
+            input
+                .iter()
+                .zip(&mut self.core)
+                .map(|(&b, k)| b ^ k)
+                .collect(),
+        )
     }
 
     // should be more idiomatic (i.e. [Result] instead of .unwrap()) but I'm tired boss
