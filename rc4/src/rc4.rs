@@ -7,7 +7,7 @@ pub enum RC4Error {
     WrongKeyLength(String),
 }
 
-#[derive(Debug, Zeroize, ZeroizeOnDrop)]
+#[derive(Debug, Zeroize, ZeroizeOnDrop, Clone)]
 struct RC4Core {
     #[zeroize]
     s: [u8; 256],
@@ -34,13 +34,13 @@ impl RC4Core {
     }
 }
 
-/// For as many iterations as are needed, the PRGA modifies the state and outputs a byte of the keystream. In each iteration, the PRGA:
-/// - increments i;
-/// - looks up the ith element of S, S[i], and adds that to j;
-/// - exchanges the values of S[i] and S[j], then uses the sum S[i] + S[j] (modulo 256) as an index to fetch a third element of S (the keystream value K below);
-/// - then bitwise exclusive ORed (XORed) with the next byte of the message to produce the next byte of either ciphertext or plaintext.
+/// Cool implementation that produces the RC4 keystream one byte at a time.
 ///
-/// Each element of S is swapped with another element at least once every 256 iterations.
+/// Each call to next advances the internal RC4 PRGA state (i, j, and the S permutation)
+/// and returns the next keystream byte.
+/// The implementation mutates the provided RC4Core (hence the &mut self):
+/// repeatedly calling next continues the stream from the last state.
+/// The output byte is exactly the PRGA output used for XOR with plaintext in RC4.
 impl Iterator for &mut RC4Core {
     type Item = u8;
 
@@ -56,7 +56,7 @@ impl Iterator for &mut RC4Core {
     }
 }
 
-#[derive(Debug, Zeroize, ZeroizeOnDrop)]
+#[derive(Debug, Zeroize, ZeroizeOnDrop, Clone)]
 pub struct RC4 {
     #[zeroize]
     core: RC4Core,
@@ -102,7 +102,7 @@ impl Output {
     }
 
     pub fn to_utf8(&self) -> String {
-        unsafe {String::from_utf8_unchecked(self.0.clone()) }
+        unsafe { String::from_utf8_unchecked(self.0.clone()) }
     }
 }
 

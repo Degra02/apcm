@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+hex = "0.4.3"
 zeroize = { version = "1.8.2", features = ["zeroize_derive"] }
