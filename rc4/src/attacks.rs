@@ -1,5 +1,6 @@
-use zeroize::{Zeroize, ZeroizeOnDrop};
+#![allow(dead_code)]
 
+use zeroize::{Zeroize, ZeroizeOnDrop};
 use crate::rc4::{Output, RC4};
 
 #[derive(Debug, Zeroize, ZeroizeOnDrop)]
@@ -25,16 +26,17 @@ impl RC4Attack {
         self.rc4.encrypt(plaintext.as_bytes()).as_bytes().to_vec()
     }
 
-    pub fn malleability(&mut self, modified_plaintext: &str) -> Output {
-        let original_plaintext = "We shall attack all intruders ";
-        let original_ciphertext = self.encrypt(original_plaintext);
-
-
-        let mut forged_ciphertext = original_ciphertext.clone();
+    pub fn malleability(&mut self, original_ciphertext: &[u8], original_plaintext: &str, modified_plaintext: &str) -> Output {
+        let mut forged_ciphertext = original_ciphertext.to_vec();
 
         for (i, forged_cipher_i) in forged_ciphertext.iter_mut().enumerate().take(original_plaintext.len()) {
             *forged_cipher_i ^= original_plaintext.as_bytes()[i] ^ modified_plaintext.as_bytes()[i];
         }
+
+        // for i in 0..original_plaintext.len() {
+        //     forged_ciphertext[i] ^=
+        //         original_plaintext.as_bytes()[i] ^ modified_plaintext.as_bytes()[i];
+        // }
 
         Output(forged_ciphertext)
     }

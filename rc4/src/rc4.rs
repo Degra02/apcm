@@ -101,8 +101,8 @@ impl Output {
         &self.0
     }
 
-    pub fn to_utf8(&self) -> Option<String> {
-        String::from_utf8(self.0.clone()).ok()
+    pub fn to_utf8(&self) -> String {
+        unsafe {String::from_utf8_unchecked(self.0.clone()) }
     }
 }
 
