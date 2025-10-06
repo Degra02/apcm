@@ -218,13 +218,12 @@ impl Keccak {
         for round in 0..24 {
             self.theta();
             self.rho_pi();
+            self.chi();
+            self.iota(round);
 
             if round == 23 {
                 self.print_last_slice();
             }
-
-            self.chi();
-            self.iota(round);
         }
     }
 
