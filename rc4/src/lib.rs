@@ -22,7 +22,6 @@ mod tests {
 
     #[test]
     fn rc4_impl() {
-        let key = "Wiki";
         let keys = ["Key", "Wiki", "Secret"];
         let plaintexts = ["Plaintext", "pedia", "Attack at dawn"];
         let expected_ciphertexts = [
