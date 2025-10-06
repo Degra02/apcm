@@ -59,7 +59,7 @@ impl Iterator for &mut RC4Core {
 #[derive(Debug, Zeroize, ZeroizeOnDrop)]
 pub struct RC4 {
     #[zeroize]
-    pub core: RC4Core,
+    core: RC4Core,
 }
 
 impl RC4 {
