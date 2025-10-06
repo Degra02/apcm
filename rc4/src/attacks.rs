@@ -31,9 +31,9 @@ impl RC4Attack {
 
 
         let mut forged_ciphertext = original_ciphertext.clone();
-        for i in 0..original_plaintext.len() {
-            forged_ciphertext[i] ^=
-                original_plaintext.as_bytes()[i] ^ modified_plaintext.as_bytes()[i];
+
+        for (i, forged_cipher_i) in forged_ciphertext.iter_mut().enumerate().take(original_plaintext.len()) {
+            *forged_cipher_i ^= original_plaintext.as_bytes()[i] ^ modified_plaintext.as_bytes()[i];
         }
 
         Output(forged_ciphertext)
