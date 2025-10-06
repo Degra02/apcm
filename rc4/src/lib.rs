@@ -13,7 +13,8 @@ mod tests {
         let modified_plaintext = "We shall kiss & hug intruders ";
         let forged_ciphertext = attack.malleability(modified_plaintext);
 
-        let decrypted_forged = RC4::decrypt(key.as_ref(), &forged_ciphertext).to_utf8().unwrap();
+        let decrypted_forged = RC4::decrypt(key.as_ref(), forged_ciphertext.as_bytes()).to_utf8().unwrap();
+        println!("forged ciphertext: {forged_ciphertext}");
         println!("forged ciphertext decrypts to: {decrypted_forged}");
     }
 

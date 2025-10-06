@@ -56,11 +56,10 @@ impl Iterator for &mut RC4Core {
     }
 }
 
-
 #[derive(Debug, Zeroize, ZeroizeOnDrop)]
 pub struct RC4 {
     #[zeroize]
-    pub core: RC4Core
+    pub core: RC4Core,
 }
 
 impl RC4 {
@@ -95,7 +94,7 @@ impl RC4 {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Output(Vec<u8>);
+pub struct Output(pub Vec<u8>);
 
 impl Output {
     pub fn as_bytes(&self) -> &[u8] {
@@ -124,4 +123,3 @@ impl LowerHex for Output {
         Ok(())
     }
 }
-

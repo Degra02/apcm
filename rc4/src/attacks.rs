@@ -1,6 +1,6 @@
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
-use crate::rc4::RC4;
+use crate::rc4::{Output, RC4};
 
 #[derive(Debug, Zeroize, ZeroizeOnDrop)]
 pub struct RC4Attack {
@@ -25,7 +25,7 @@ impl RC4Attack {
         self.rc4.encrypt(plaintext.as_bytes()).as_bytes().to_vec()
     }
 
-    pub fn malleability(&mut self, modified_plaintext: &str) -> Vec<u8> {
+    pub fn malleability(&mut self, modified_plaintext: &str) -> Output {
         let original_plaintext = "We shall attack all intruders ";
         let original_ciphertext = self.encrypt(original_plaintext);
 
@@ -36,6 +36,6 @@ impl RC4Attack {
                 original_plaintext.as_bytes()[i] ^ modified_plaintext.as_bytes()[i];
         }
 
-        forged_ciphertext
+        Output(forged_ciphertext)
     }
 }
