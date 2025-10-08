@@ -7,14 +7,14 @@ pub enum RC4Error {
 }
 
 #[derive(Debug, Zeroize, ZeroizeOnDrop, Clone)]
-struct RC4Core {
+struct Prng {
     #[zeroize]
     s: [u8; 256],
     i: usize,
     j: usize,
 }
 
-impl RC4Core {
+impl Prng {
     pub fn new(key: &[u8]) -> Result<Self, RC4Error> {
         let mut s = [0u8; 256];
         for (i, si) in s.iter_mut().enumerate() {
@@ -40,7 +40,7 @@ impl RC4Core {
 /// The implementation mutates the provided RC4Core (hence the &mut self):
 /// repeatedly calling next continues the stream from the last state.
 /// The output byte is exactly the PRGA output used for XOR with plaintext in RC4.
-impl Iterator for &mut RC4Core {
+impl Iterator for &mut Prng {
     type Item = u8;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -58,7 +58,7 @@ impl Iterator for &mut RC4Core {
 #[derive(Debug, Zeroize, ZeroizeOnDrop, Clone)]
 pub struct RC4 {
     #[zeroize]
-    core: RC4Core,
+    core: Prng,
 }
 
 impl RC4 {
@@ -70,7 +70,7 @@ impl RC4 {
             )));
         }
 
-        let core = RC4Core::new(key)?;
+        let core = Prng::new(key)?;
 
         Ok(Self { core })
     }
