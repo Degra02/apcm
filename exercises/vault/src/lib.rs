@@ -6,7 +6,7 @@ pub mod vault;
 // Run `cargo test -- --nocapture`
 // to print the solution (must have valid fonts in the device)
 //
-// These were like 6 lines of python but whatever
+// These were like 6 lines of python but whatever, let's be rusty
 
 #[cfg(test)]
 mod tests {

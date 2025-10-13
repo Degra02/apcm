@@ -3,7 +3,7 @@ use std::{fs::File, io::Read};
 pub struct Solver;
 
 impl Solver {
-    pub fn solve(path: &str) -> std::io::Result<String>{
+    pub fn solve(path: &str) -> std::io::Result<String> {
         let mut file = File::open(path)?;
         let mut content = String::new();
         file.read_to_string(&mut content)?;
@@ -32,9 +32,18 @@ impl Solver {
             data.push(zeroes as f32 / bytes.len() as f32);
         }
 
+        // RC4's second bytes have 1/128 chance to be 0, rather than 1/256.
+        // The middle point for which to distinguish rc4 line or chaos line 
+        // then is (1/128 + 1/256) / 2
         let bits = data
             .iter()
-            .map(|&p| if p < (1./128. + 1./256.) / 2. { 0 } else { 1 })
+            .map(|&p| {
+                if p < (1. / 128. + 1. / 256.) / 2. {
+                    0
+                } else {
+                    1
+                }
+            })
             .collect::<Vec<u8>>();
 
         let byte1 = bits[..8].iter().fold(0u8, |acc, &b| acc << 1 | b);
@@ -45,7 +54,7 @@ impl Solver {
         if let Ok(flag) = str::from_utf8(&bytes) {
             Ok(flag.to_string())
         } else {
-            Err(std::io::Error::other("too bad") )
+            Err(std::io::Error::other("too bad"))
         }
     }
 }
