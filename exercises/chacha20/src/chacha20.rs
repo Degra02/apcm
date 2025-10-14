@@ -1,7 +1,4 @@
-#![allow(dead_code)]
-
 use std::fmt::{Display, LowerHex};
-
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 #[derive(Debug, Clone)]
@@ -12,25 +9,8 @@ pub enum InvalidLength {
     Nonce,
 }
 
-fn quarter_round(x: &mut [u32; 16], a: usize, b: usize, c: usize, d: usize) {
-    x[a] = x[a].wrapping_add(x[b]);
-    x[d] ^= x[a];
-    x[d] = x[d].rotate_left(16);
-
-    x[c] = x[c].wrapping_add(x[d]);
-    x[b] ^= x[c];
-    x[b] = x[b].rotate_left(12);
-
-    x[a] = x[a].wrapping_add(x[b]);
-    x[d] ^= x[a];
-    x[d] = x[d].rotate_left(8);
-
-    x[c] = x[c].wrapping_add(x[d]);
-    x[b] ^= x[c];
-    x[b] = x[b].rotate_left(7);
-}
-
 const ROUNDS: usize = 20;
+const DEFAULT_CONSTANT: [u8; 16] = *b"expand 32-byte k";
 
 #[derive(Debug, Zeroize, ZeroizeOnDrop)]
 pub struct ChaCha20State {
@@ -49,9 +29,12 @@ impl ChaCha20State {
         counter: Option<u32>,
         constant: Option<&[u8; 16]>,
     ) -> Result<Self, InvalidLength> {
-        // Key
         if key.len() != 32 {
             return Err(InvalidLength::Key);
+        }
+
+        if nonce.len() != 3 {
+            return Err(InvalidLength::Nonce);
         }
 
         let mut key_array = [0u8; 32];
@@ -64,18 +47,8 @@ impl ChaCha20State {
             .try_into()
             .unwrap();
 
-        // Constant
-        let mut constant_val = [0u8; 16];
-        if let Some(c) = constant {
-            if c.len() != 16 {
-                return Err(InvalidLength::Constant);
-            }
-            constant_val.copy_from_slice(c);
-        } else {
-            constant_val.copy_from_slice(b"expand 32-byte k");
-        }
-
-        let constant_vec = constant_val
+        let constant_bytes = constant.unwrap_or(&DEFAULT_CONSTANT);
+        let constant_vec = constant_bytes
             .chunks(4)
             .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
             .collect::<Vec<u32>>();
@@ -95,15 +68,7 @@ impl ChaCha20State {
         let mut state = [0u32; 16];
         state[0..4].copy_from_slice(&self.constant);
         state[4..12].copy_from_slice(&self.key);
-
-        let counter_bytes = self
-            .counter
-            .to_le_bytes()
-            .chunks(4)
-            .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
-            .collect::<Vec<u32>>();
-
-        state[12..13].copy_from_slice(&counter_bytes);
+        state[12] = self.counter;
         state[13..16].copy_from_slice(&self.nonce);
 
         state
@@ -115,16 +80,16 @@ impl ChaCha20State {
 
         for _ in (0..ROUNDS).step_by(2) {
             // Odd round
-            quarter_round(&mut x, 0, 4, 8, 12);
-            quarter_round(&mut x, 1, 5, 9, 13);
-            quarter_round(&mut x, 2, 6, 10, 14);
-            quarter_round(&mut x, 3, 7, 11, 15);
+            ChaCha20State::quarter_round(&mut x, 0, 4, 8, 12);
+            ChaCha20State::quarter_round(&mut x, 1, 5, 9, 13);
+            ChaCha20State::quarter_round(&mut x, 2, 6, 10, 14);
+            ChaCha20State::quarter_round(&mut x, 3, 7, 11, 15);
 
             // Even round
-            quarter_round(&mut x, 0, 5, 10, 15);
-            quarter_round(&mut x, 1, 6, 11, 12);
-            quarter_round(&mut x, 2, 7, 8, 13);
-            quarter_round(&mut x, 3, 4, 9, 14);
+            ChaCha20State::quarter_round(&mut x, 0, 5, 10, 15);
+            ChaCha20State::quarter_round(&mut x, 1, 6, 11, 12);
+            ChaCha20State::quarter_round(&mut x, 2, 7, 8, 13);
+            ChaCha20State::quarter_round(&mut x, 3, 4, 9, 14);
         }
 
         x.iter_mut().enumerate().for_each(|(i, v)| {
@@ -132,6 +97,24 @@ impl ChaCha20State {
         });
 
         x
+    }
+
+    fn quarter_round(x: &mut [u32; 16], a: usize, b: usize, c: usize, d: usize) {
+        x[a] = x[a].wrapping_add(x[b]);
+        x[d] ^= x[a];
+        x[d] = x[d].rotate_left(16);
+
+        x[c] = x[c].wrapping_add(x[d]);
+        x[b] ^= x[c];
+        x[b] = x[b].rotate_left(12);
+
+        x[a] = x[a].wrapping_add(x[b]);
+        x[d] ^= x[a];
+        x[d] = x[d].rotate_left(8);
+
+        x[c] = x[c].wrapping_add(x[d]);
+        x[b] ^= x[c];
+        x[b] = x[b].rotate_left(7);
     }
 }
 
@@ -155,10 +138,11 @@ impl Iterator for &mut ChaCha20State {
 #[derive(Debug, Zeroize, ZeroizeOnDrop)]
 pub struct ChaCha20(#[zeroize] ChaCha20State);
 
+#[allow(dead_code)]
 impl ChaCha20 {
     pub fn new(
         key: &[u8],
-        nonce: &[u8],
+        nonce: &[u8; 12],
         counter: Option<&[u8; 4]>,
         constant: Option<&[u8; 16]>,
     ) -> Result<Self, InvalidLength> {
@@ -188,16 +172,6 @@ impl ChaCha20 {
     }
 
     pub fn encrypt(&mut self, plaintext: &[u8]) -> Output {
-        // let mut ciphertext = Vec::with_capacity(plaintext.len());
-        // let mut keystream = &mut self.0;
-        //
-        // for chunk in plaintext.chunks(64) {
-        //     let keystream_block = keystream.next().unwrap();
-        //     for (i, &byte) in chunk.iter().enumerate() {
-        //         ciphertext.push(byte ^ keystream_block[i]);
-        //     }
-        // }
-
         let ciphertext: Vec<u8> = plaintext
             .chunks(64)
             .zip(&mut self.0)
@@ -207,7 +181,7 @@ impl ChaCha20 {
         Output(ciphertext)
     }
 
-    fn keystream(&mut self, size: usize) -> Vec<u8> {
+    pub fn keystream(&mut self, size: usize) -> Vec<u8> {
         self.0.into_iter()
             .flatten()
             .take(size)
@@ -218,6 +192,7 @@ impl ChaCha20 {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Output(pub Vec<u8>);
 
+#[allow(dead_code)]
 impl Output {
     pub fn as_bytes(&self) -> &[u8] {
         &self.0
