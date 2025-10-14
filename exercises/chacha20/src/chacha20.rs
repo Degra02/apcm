@@ -25,7 +25,7 @@ pub struct Prng {
 impl Prng {
     pub fn new(
         key: &[u8],
-        nonce: [u32; 3],
+        nonce: &[u8],
         counter: Option<u32>,
         constant: Option<&[u8; 16]>,
     ) -> Result<Self, InvalidLength> {
@@ -33,7 +33,7 @@ impl Prng {
             return Err(InvalidLength::Key);
         }
 
-        if nonce.len() != 3 {
+        if nonce.len() != 12 {
             return Err(InvalidLength::Nonce);
         }
 
@@ -47,17 +47,26 @@ impl Prng {
             .try_into()
             .unwrap();
 
-        let constant_bytes = constant.unwrap_or(&DEFAULT_CONSTANT);
-        let constant_vec = constant_bytes
+        let nonce: [u32; 3] = nonce
             .chunks(4)
             .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
-            .collect::<Vec<u32>>();
+            .collect::<Vec<u32>>()
+            .try_into()
+            .unwrap();
+
+        let constant_bytes = constant.unwrap_or(&DEFAULT_CONSTANT);
+        let constant = constant_bytes
+            .chunks(4)
+            .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
+            .collect::<Vec<u32>>()
+            .try_into()
+            .unwrap();
 
         // Counter
         let counter = counter.unwrap_or_default();
 
         Ok(Prng {
-            constant: constant_vec.try_into().unwrap(),
+            constant,
             key: key_array,
             counter,
             nonce,
@@ -142,33 +151,11 @@ pub struct ChaCha20(#[zeroize] Prng);
 impl ChaCha20 {
     pub fn new(
         key: &[u8],
-        nonce: &[u8; 12],
-        counter: Option<&[u8; 4]>,
+        nonce: &[u8],
+        counter: Option<u32>,
         constant: Option<&[u8; 16]>,
     ) -> Result<Self, InvalidLength> {
-        if nonce.len() != 12 {
-            return Err(InvalidLength::Nonce);
-        }
-
-        let nonce_array: [u32; 3] = nonce
-            .chunks(4)
-            .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
-            .collect::<Vec<u32>>()
-            .try_into()
-            .unwrap();
-
-        let counter_array: u32;
-        if let Some(c) = counter {
-            if c.len() != 4 {
-                return Err(InvalidLength::Counter);
-            }
-            counter_array = u32::from_le_bytes(*c);
-        } else {
-            counter_array = 0u32;
-        }
-
-        let state = Prng::new(key, nonce_array, Some(counter_array), constant)?;
-        Ok(ChaCha20(state))
+        Ok(ChaCha20(Prng::new(key, nonce, counter, constant)?))
     }
 
     pub fn encrypt(&mut self, plaintext: &[u8]) -> Output {

@@ -24,7 +24,7 @@ mod tests {
         let counter = b"Ex_0";
         let constant = b"DanceOfRaloberon";
 
-        let mut cipher = ChaCha20::new(key.as_ref(), nonce, Some(counter), Some(constant))?;
+        let mut cipher = ChaCha20::new(key.as_ref(), nonce, Some(u32::from_le_bytes(*counter)), Some(constant))?;
         let keystream = Output(cipher.keystream(128));
 
         println!("Keystream: {}", keystream);
@@ -55,7 +55,7 @@ mod tests {
 
         let plaintext = b"Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
 
-        let mut cipher = ChaCha20::new(&key, &nonce, Some(&counter.to_le_bytes()), None)?;
+        let mut cipher = ChaCha20::new(&key, &nonce, Some(counter), None)?;
         let output = cipher.encrypt(plaintext);
         let expected_ciphertext = hex!("6e2e359a2568f98041ba0728dd0d6981e97e7aec1d4360c20a27afccfd9fae0bf91b65c5524733ab8f593dabcd62b3571639d624e65152ab8f530c359f0861d807ca0dbf500d6a6156a38e088a22b65e52bc514d16ccf806818ce91ab77937365af90bbf74a35be6b40b8eedf2785e42874d");
 
