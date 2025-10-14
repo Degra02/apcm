@@ -46,6 +46,7 @@ impl ChaCha20State {
     pub fn new(
         key: &[u8],
         nonce: [u32; 3],
+        counter: Option<u32>,
         constant: Option<&[u8]>,
     ) -> Result<Self, InvalidLength> {
         // Key
@@ -79,10 +80,13 @@ impl ChaCha20State {
             .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
             .collect::<Vec<u32>>();
 
+        // Counter
+        let counter = counter.unwrap_or_default();
+
         Ok(ChaCha20State {
             constant: constant_vec.try_into().unwrap(),
             key: key_array,
-            counter: 0u32,
+            counter,
             nonce,
         })
     }
@@ -152,7 +156,7 @@ impl Iterator for &mut ChaCha20State {
 pub struct ChaCha20(#[zeroize] ChaCha20State);
 
 impl ChaCha20 {
-    pub fn new(key: &[u8], nonce: &[u8], constant: Option<&[u8]>) -> Result<Self, InvalidLength> {
+    pub fn new(key: &[u8], nonce: &[u8], counter: Option<u32>, constant: Option<&[u8]>) -> Result<Self, InvalidLength> {
         if nonce.len() != 12 {
             return Err(InvalidLength::Nonce);
         }
@@ -164,7 +168,7 @@ impl ChaCha20 {
             .try_into()
             .unwrap();
 
-        let state = ChaCha20State::new(key, nonce_array, constant)?;
+        let state = ChaCha20State::new(key, nonce_array, counter, constant)?;
         Ok(ChaCha20(state))
     }
 

@@ -46,6 +46,24 @@ mod tests {
     }
 
     #[test]
+    fn recover_skeleton_keystream() {
+        let key = "Key";
+        let rc4 = RC4::new(key.as_ref()).unwrap();
+
+        let original_plaintext = "We shall attack all intruders";
+        let ciphertext =
+            "DDF62AE5641CFB52AB55DE95171FA86E900CEA7639B16AA5F0E58E1CBB".to_lowercase();
+
+        let mut attack = RC4Attack::new(rc4.clone(), key.as_ref());
+        let recovered_keystream = attack.recover_key_stream(original_plaintext, ciphertext.as_bytes());
+
+        println!(
+            "Recovered keystream: {}",
+            hex::encode(recovered_keystream)
+        );
+    }
+
+    #[test]
     fn recover_key_stream() {
         let key = "Key";
         let mut rc4 = RC4::new(key.as_ref()).unwrap();
