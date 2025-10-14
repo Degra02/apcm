@@ -14,7 +14,6 @@ mod chacha20;
 #[cfg(test)]
 mod tests {
     use hex_literal::hex;
-
     use crate::chacha20::{ChaCha20, InvalidLength, Output};
 
     #[test]
