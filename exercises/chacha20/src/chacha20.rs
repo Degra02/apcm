@@ -13,7 +13,7 @@ const ROUNDS: usize = 20;
 const DEFAULT_CONSTANT: [u8; 16] = *b"expand 32-byte k";
 
 #[derive(Debug, Zeroize, ZeroizeOnDrop)]
-pub struct ChaCha20State {
+pub struct Prng {
     constant: [u32; 4],
 
     #[zeroize]
@@ -22,7 +22,7 @@ pub struct ChaCha20State {
     nonce: [u32; 3],
 }
 
-impl ChaCha20State {
+impl Prng {
     pub fn new(
         key: &[u8],
         nonce: [u32; 3],
@@ -56,7 +56,7 @@ impl ChaCha20State {
         // Counter
         let counter = counter.unwrap_or_default();
 
-        Ok(ChaCha20State {
+        Ok(Prng {
             constant: constant_vec.try_into().unwrap(),
             key: key_array,
             counter,
@@ -80,16 +80,16 @@ impl ChaCha20State {
 
         for _ in (0..ROUNDS).step_by(2) {
             // Odd round
-            ChaCha20State::quarter_round(&mut x, 0, 4, 8, 12);
-            ChaCha20State::quarter_round(&mut x, 1, 5, 9, 13);
-            ChaCha20State::quarter_round(&mut x, 2, 6, 10, 14);
-            ChaCha20State::quarter_round(&mut x, 3, 7, 11, 15);
+            Prng::quarter_round(&mut x, 0, 4, 8, 12);
+            Prng::quarter_round(&mut x, 1, 5, 9, 13);
+            Prng::quarter_round(&mut x, 2, 6, 10, 14);
+            Prng::quarter_round(&mut x, 3, 7, 11, 15);
 
             // Even round
-            ChaCha20State::quarter_round(&mut x, 0, 5, 10, 15);
-            ChaCha20State::quarter_round(&mut x, 1, 6, 11, 12);
-            ChaCha20State::quarter_round(&mut x, 2, 7, 8, 13);
-            ChaCha20State::quarter_round(&mut x, 3, 4, 9, 14);
+            Prng::quarter_round(&mut x, 0, 5, 10, 15);
+            Prng::quarter_round(&mut x, 1, 6, 11, 12);
+            Prng::quarter_round(&mut x, 2, 7, 8, 13);
+            Prng::quarter_round(&mut x, 3, 4, 9, 14);
         }
 
         x.iter_mut().enumerate().for_each(|(i, v)| {
@@ -118,7 +118,7 @@ impl ChaCha20State {
     }
 }
 
-impl Iterator for &mut ChaCha20State {
+impl Iterator for &mut Prng {
     type Item = [u8; 64];
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -136,7 +136,7 @@ impl Iterator for &mut ChaCha20State {
 }
 
 #[derive(Debug, Zeroize, ZeroizeOnDrop)]
-pub struct ChaCha20(#[zeroize] ChaCha20State);
+pub struct ChaCha20(#[zeroize] Prng);
 
 #[allow(dead_code)]
 impl ChaCha20 {
@@ -167,7 +167,7 @@ impl ChaCha20 {
             counter_array = 0u32;
         }
 
-        let state = ChaCha20State::new(key, nonce_array, Some(counter_array), constant)?;
+        let state = Prng::new(key, nonce_array, Some(counter_array), constant)?;
         Ok(ChaCha20(state))
     }
 

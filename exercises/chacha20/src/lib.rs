@@ -1,5 +1,16 @@
 mod chacha20;
 
+// Author: Filippo De Grandi
+// Group: Bachata20
+//
+// How to run tests:
+// cargo test <test-name> -- --nocapture
+//
+// How to run solution:
+// cargo test solution -- --nocapture
+//
+// this will print the keystream
+
 #[cfg(test)]
 mod tests {
     use hex_literal::hex;
