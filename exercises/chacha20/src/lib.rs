@@ -20,7 +20,7 @@ const KEYSTREAM_BITS: usize = 128;
 
 #[cfg(test)]
 mod tests {
-    use crate::{chacha20::{ChaCha20, InvalidLength, Output}, KEYSTREAM_BITS};
+    use crate::{chacha20::{ChaCha, ChaChaVariant, InvalidLength, Original, Output, IETF}, KEYSTREAM_BITS};
     use hex_literal::hex;
 
 
@@ -31,7 +31,7 @@ mod tests {
         let nonce = b"FenceOrDance";
         let key = hex!("330146455a0009591655451707015e12000e59150d0b4d474453541412000000");
 
-        let mut cipher = ChaCha20::new(
+        let mut cipher = ChaCha::<20, IETF>::new(
             &key,
             nonce,
             Some(counter),
@@ -45,19 +45,35 @@ mod tests {
     }
 
     #[test]
-    fn implementation() -> Result<(), InvalidLength> {
+    fn ietf_impl() -> Result<(), InvalidLength> {
         let key = [0x42; 32];
         let nonce = [0x24; 12];
         let plaintext = hex!("00010203 04050607 08090A0B 0C0D0E0F");
         let ciphertext = hex!("e405626e 4f1236b3 670ee428 332ea20e");
 
-        let mut cipher = ChaCha20::new(&key, &nonce, None, None)?;
+        let mut cipher = ChaCha::<20, IETF>::new(&key, &nonce, None, None)?;
 
         let output = cipher.encrypt(&plaintext);
 
         assert_eq!(output.as_bytes(), &ciphertext);
         Ok(())
     }
+
+    // This implementation is supposed to work for original and IETF variants,
+    // but I'm lazy at the moment
+    // #[test]
+    // fn original_impl() -> Result<(), InvalidLength> {
+    //     let key = [0x42; 32];
+    //     let nonce = [0x24; 8];
+    //     let plaintext = hex!("00010203 04050607 08090A0B 0C0D0E0F");
+    //
+    //     let mut cipher = ChaCha::<8, Original>::new(&key, &nonce, None, None)?;
+    //
+    //     let output = cipher.encrypt(&plaintext);
+    //
+    //     println!("Output: {:x?}", output.as_bytes());
+    //     Ok(())
+    // }
 
     #[test]
     fn rfc_kat() -> Result<(), InvalidLength> {
@@ -69,7 +85,7 @@ mod tests {
 
         let plaintext = b"Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
 
-        let mut cipher = ChaCha20::new(&key, &nonce, Some(counter), None)?;
+        let mut cipher = ChaCha::<20, IETF>::new(&key, &nonce, Some(counter), None)?;
         let output = cipher.encrypt(plaintext);
         let expected_ciphertext = hex!("6e2e359a2568f98041ba0728dd0d6981e97e7aec1d4360c20a27afccfd9fae0bf91b65c5524733ab8f593dabcd62b3571639d624e65152ab8f530c359f0861d807ca0dbf500d6a6156a38e088a22b65e52bc514d16ccf806818ce91ab77937365af90bbf74a35be6b40b8eedf2785e42874d");
 
