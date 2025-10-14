@@ -11,7 +11,7 @@ pub mod rc4;
 // cargo test <test_name> -- --nocapture
 //
 // For the solution:
-// cargo run solution -- --nocapture
+// cargo test solution -- --nocapture
 // This will print the forged ciphertext in hex format
 
 #[cfg(test)]
