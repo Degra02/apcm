@@ -9,8 +9,8 @@ mod tests {
     #[test]
     fn solution() -> Result<(), InvalidLength> {
         let key = hex!("330146455a0009591655451707015e12000e59150d0b4d474453541412000000");
-        let nonce = b"Fencing or Dance";
-        let counter = b"Ex_04_01";
+        let nonce = b"Fencing or D";
+        let counter = b"Ex_0";
         let constant = b"DanceOfRaloberon";
         
         println!("Key: {:x?}, Len: {}", key, key.len());

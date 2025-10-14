@@ -47,7 +47,7 @@ impl ChaCha20State {
         key: &[u8],
         nonce: [u32; 3],
         counter: Option<u32>,
-        constant: Option<&[u8]>,
+        constant: Option<&[u8; 16]>,
     ) -> Result<Self, InvalidLength> {
         // Key
         if key.len() != 32 {
@@ -156,7 +156,12 @@ impl Iterator for &mut ChaCha20State {
 pub struct ChaCha20(#[zeroize] ChaCha20State);
 
 impl ChaCha20 {
-    pub fn new(key: &[u8], nonce: &[u8], counter: Option<u32>, constant: Option<&[u8]>) -> Result<Self, InvalidLength> {
+    pub fn new(
+        key: &[u8],
+        nonce: &[u8],
+        counter: Option<&[u8; 4]>,
+        constant: Option<&[u8; 16]>,
+    ) -> Result<Self, InvalidLength> {
         if nonce.len() != 12 {
             return Err(InvalidLength::Nonce);
         }
@@ -168,7 +173,17 @@ impl ChaCha20 {
             .try_into()
             .unwrap();
 
-        let state = ChaCha20State::new(key, nonce_array, counter, constant)?;
+        let counter_array: u32;
+        if let Some(c) = counter {
+            if c.len() != 4 {
+                return Err(InvalidLength::Counter);
+            }
+            counter_array = u32::from_le_bytes(*c);
+        } else {
+            counter_array = 0u32;
+        }
+
+        let state = ChaCha20State::new(key, nonce_array, Some(counter_array), constant)?;
         Ok(ChaCha20(state))
     }
 
@@ -190,6 +205,13 @@ impl ChaCha20 {
             .collect();
 
         Output(ciphertext)
+    }
+
+    fn keystream(&mut self, size: usize) -> Vec<u8> {
+        self.0.into_iter()
+            .flatten()
+            .take(size)
+            .collect()
     }
 }
 
