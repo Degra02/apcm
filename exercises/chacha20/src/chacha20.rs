@@ -7,6 +7,7 @@ pub enum InvalidLength {
     Constant,
     Counter,
     Nonce,
+    Other,
 }
 
 const ROUNDS: usize = 20;
@@ -37,37 +38,18 @@ impl Prng {
             return Err(InvalidLength::Nonce);
         }
 
-        let mut key_array = [0u8; 32];
-        key_array.copy_from_slice(key);
+        let key: [u32; 8] = Prng::to_u32_array(key)?;
 
-        let key_array = key_array
-            .chunks(4)
-            .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
-            .collect::<Vec<u32>>()
-            .try_into()
-            .unwrap();
-
-        let nonce: [u32; 3] = nonce
-            .chunks(4)
-            .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
-            .collect::<Vec<u32>>()
-            .try_into()
-            .unwrap();
+        let nonce: [u32; 3] = Prng::to_u32_array(nonce)?;
 
         let constant_bytes = constant.unwrap_or(&DEFAULT_CONSTANT);
-        let constant = constant_bytes
-            .chunks(4)
-            .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
-            .collect::<Vec<u32>>()
-            .try_into()
-            .unwrap();
+        let constant: [u32; 4] = Prng::to_u32_array(constant_bytes)?;
 
-        // Counter
         let counter = counter.unwrap_or_default();
 
         Ok(Prng {
             constant,
-            key: key_array,
+            key,
             counter,
             nonce,
         })
@@ -124,6 +106,17 @@ impl Prng {
         x[c] = x[c].wrapping_add(x[d]);
         x[b] ^= x[c];
         x[b] = x[b].rotate_left(7);
+    }
+
+    fn to_u32_array<const N: usize>(bytes: &[u8]) -> Result<[u32; N], InvalidLength> {
+        if bytes.len() != N * 4 {
+            return Err(InvalidLength::Other);
+        }
+        let mut arr = [0u32; N];
+        for (i, chunk) in bytes.chunks_exact(4).enumerate() {
+            arr[i] = u32::from_le_bytes(chunk.try_into().unwrap());
+        }
+        Ok(arr)
     }
 }
 
