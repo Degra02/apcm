@@ -55,6 +55,7 @@ impl Prng {
         })
     }
 
+    /// constructs the state
     fn state(&self) -> [u32; 16] {
         let mut state = [0u32; 16];
         state[0..4].copy_from_slice(&self.constant);
@@ -65,22 +66,23 @@ impl Prng {
         state
     }
 
+    /// generates a single ChaCha block
     fn chacha_block(&self) -> [u32; 16] {
         let state: [u32; 16] = self.state();
         let mut x: [u32; 16] = self.state();
 
         for _ in (0..ROUNDS).step_by(2) {
             // Odd round
-            Prng::quarter_round(&mut x, 0, 4, 8, 12);
-            Prng::quarter_round(&mut x, 1, 5, 9, 13);
-            Prng::quarter_round(&mut x, 2, 6, 10, 14);
-            Prng::quarter_round(&mut x, 3, 7, 11, 15);
+            Prng::qr(&mut x, 0, 4, 8, 12);
+            Prng::qr(&mut x, 1, 5, 9, 13);
+            Prng::qr(&mut x, 2, 6, 10, 14);
+            Prng::qr(&mut x, 3, 7, 11, 15);
 
             // Even round
-            Prng::quarter_round(&mut x, 0, 5, 10, 15);
-            Prng::quarter_round(&mut x, 1, 6, 11, 12);
-            Prng::quarter_round(&mut x, 2, 7, 8, 13);
-            Prng::quarter_round(&mut x, 3, 4, 9, 14);
+            Prng::qr(&mut x, 0, 5, 10, 15);
+            Prng::qr(&mut x, 1, 6, 11, 12);
+            Prng::qr(&mut x, 2, 7, 8, 13);
+            Prng::qr(&mut x, 3, 4, 9, 14);
         }
 
         x.iter_mut().enumerate().for_each(|(i, v)| {
@@ -90,7 +92,8 @@ impl Prng {
         x
     }
 
-    fn quarter_round(x: &mut [u32; 16], a: usize, b: usize, c: usize, d: usize) {
+    /// quarter round function
+    fn qr(x: &mut [u32; 16], a: usize, b: usize, c: usize, d: usize) {
         x[a] = x[a].wrapping_add(x[b]);
         x[d] ^= x[a];
         x[d] = x[d].rotate_left(16);
@@ -108,6 +111,7 @@ impl Prng {
         x[b] = x[b].rotate_left(7);
     }
 
+    /// helper function to convert a byte slice to an array of u32
     fn to_u32_array<const N: usize>(bytes: &[u8]) -> Result<[u32; N], InvalidLength> {
         if bytes.len() != N * 4 {
             return Err(InvalidLength::Other);
@@ -120,6 +124,8 @@ impl Prng {
     }
 }
 
+/// like the RC4 implementation, Iterator is implemented for the Prng
+/// to enable some cool iterator functions (i.e. the encrypt and keystream methods)
 impl Iterator for &mut Prng {
     type Item = [u8; 64];
 
@@ -137,6 +143,7 @@ impl Iterator for &mut Prng {
     }
 }
 
+/// wrapper struct for the ChaCha Prng
 #[derive(Debug, Zeroize, ZeroizeOnDrop)]
 pub struct ChaCha20(#[zeroize] Prng);
 
@@ -161,14 +168,12 @@ impl ChaCha20 {
         Output(ciphertext)
     }
 
-    pub fn keystream(&mut self, size: usize) -> Vec<u8> {
-        self.0.into_iter()
-            .flatten()
-            .take(size)
-            .collect()
+    pub fn keystream(&mut self, bits: usize) -> Vec<u8> {
+        self.0.into_iter().flatten().take(bits).collect()
     }
 }
 
+/// usual output struct for a cleaner implementation
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Output(pub Vec<u8>);
 
