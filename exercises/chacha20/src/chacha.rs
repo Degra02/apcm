@@ -107,22 +107,19 @@ where
             return Err(InvalidLength::Nonce);
         }
 
-        let key: [u32; 8] = Self::to_u32_array(key)?;
+        let key: [u32; 8] = Self::to_u32_array(key, InvalidLength::Key)?;
 
-        // let nonce: [u32; 3] = Self::to_u32_array(nonce)?;
         let mut nonce_array = [0u32; 3];
-        let nonce_converted = Self::to_u32_array::<3>(nonce)?;
+        let nonce_converted = Self::to_u32_array::<3>(nonce, InvalidLength::Nonce)?;
         nonce_array[..V::NONCE_WORDS].copy_from_slice(&nonce_converted[..V::NONCE_WORDS]);
 
         let constant_bytes = constant.unwrap_or(&DEFAULT_CONSTANT);
-        let constant: [u32; 4] = Self::to_u32_array(constant_bytes)?;
-
-        let counter = counter.unwrap_or_default();
+        let constant: [u32; 4] = Self::to_u32_array(constant_bytes, InvalidLength::Constant)?;
 
         Ok(Self {
             constant,
             key,
-            counter,
+            counter: counter.unwrap_or_default(),
             nonce: nonce_array,
             _variant: std::marker::PhantomData,
         })
@@ -179,10 +176,10 @@ where
     }
 
     /// helper function to convert a byte slice to an array of u32
-    fn to_u32_array<const N: usize>(bytes: &[u8]) -> Result<[u32; N], InvalidLength> {
+    fn to_u32_array<const N: usize>(bytes: &[u8], err: InvalidLength) -> Result<[u32; N], InvalidLength> {
         // I should be checking here but I'm going down a rabbit hole
         if bytes.len() != N * 4 {
-            return Err(InvalidLength::Other);
+            return Err(err);
         }
         let mut arr = [0u32; N];
         for (i, chunk) in bytes.chunks_exact(4).enumerate() {

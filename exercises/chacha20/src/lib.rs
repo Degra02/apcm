@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-mod chacha20;
+mod chacha;
 
 // Author: Filippo De Grandi
 // Group: Bachata20
@@ -12,15 +12,15 @@ mod chacha20;
 // cargo test solution -- --nocapture
 //
 // this will print the keystream.
-// I did not understand if you wanted 64 or 128 bits of the keystream,
+// I did not understand if you wanted 64 or 128 bytes of the keystream,
 // anyway just change this value:
-const KEYSTREAM_BITS: usize = 128;
-// and you will get the first KEYSTREAM_BITS of the keystream.
+const KEYSTREAM_BYTES: usize = 128;
+// and you will get the first KEYSTREAM_BYTES of the keystream.
 
 
 #[cfg(test)]
 mod tests {
-    use crate::{chacha20::{ChaCha, ChaChaVariant, InvalidLength, Original, Output, IETF}, KEYSTREAM_BITS};
+    use crate::{chacha::{ChaCha, InvalidLength, Original, Output, IETF}, KEYSTREAM_BYTES};
     use hex_literal::hex;
 
 
@@ -37,7 +37,7 @@ mod tests {
             Some(counter),
             Some(constant),
         )?;
-        let keystream = Output(cipher.keystream(KEYSTREAM_BITS));
+        let keystream = Output(cipher.keystream(KEYSTREAM_BYTES));
 
         println!("Keystream: {}", keystream);
 
@@ -60,20 +60,20 @@ mod tests {
     }
 
     // This implementation is supposed to work for original and IETF variants,
-    // but I'm lazy at the moment
-    // #[test]
-    // fn original_impl() -> Result<(), InvalidLength> {
-    //     let key = [0x42; 32];
-    //     let nonce = [0x24; 8];
-    //     let plaintext = hex!("00010203 04050607 08090A0B 0C0D0E0F");
-    //
-    //     let mut cipher = ChaCha::<8, Original>::new(&key, &nonce, None, None)?;
-    //
-    //     let output = cipher.encrypt(&plaintext);
-    //
-    //     println!("Output: {:x?}", output.as_bytes());
-    //     Ok(())
-    // }
+    // also with different number of rounds, but some compile time checks are missing.
+    #[test]
+    fn original_impl() -> Result<(), InvalidLength> {
+        let key = [0x42; 32];
+        let nonce = [0x24; 8];
+        let plaintext = hex!("00010203 04050607 08090A0B 0C0D0E0F");
+
+        let mut cipher = ChaCha::<8, Original>::new(&key, &nonce, None, None)?;
+
+        let output = cipher.encrypt(&plaintext);
+
+        println!("Output: {:x?}", output.as_bytes());
+        Ok(())
+    }
 
     #[test]
     fn rfc_kat() -> Result<(), InvalidLength> {
