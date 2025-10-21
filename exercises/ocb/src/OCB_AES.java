@@ -4,8 +4,10 @@ import static java.lang.System.*;
 
 public class OCB_AES {
     private final byte[][] L;
-    // Added L_* for ease of use
+    // Add L_* and L_dollar for ease of use
     private final byte[] L_ast;
+    private final byte[] L_dollar;
+
     private final byte[] sum;
     private final byte[] offset;
     private final byte[] checksum;
@@ -34,7 +36,8 @@ public class OCB_AES {
         }
 
         // BUG: Fixed out of bounds
-        L[0] = dbl(dbl(L_ast));
+        L_dollar = dbl(L_ast);
+        L[0] = dbl(L_dollar);
         for (int i = 1; i < MAX_LOG_MESSAGES; i++) {
             L[i] = dbl(L[i - 1]);
         }
