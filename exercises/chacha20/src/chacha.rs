@@ -109,6 +109,10 @@ where
 
         let key: [u32; 8] = Self::to_u32_array(key, InvalidLength::Key)?;
 
+        if nonce.len() != V::NONCE_WORDS * 4 {
+            return Err(InvalidLength::Nonce);
+        }
+
         let mut nonce_array = [0u32; 3];
         let nonce_converted = Self::to_u32_array::<3>(nonce, InvalidLength::Nonce)?;
         nonce_array[..V::NONCE_WORDS].copy_from_slice(&nonce_converted[..V::NONCE_WORDS]);
@@ -177,8 +181,7 @@ where
 
     /// helper function to convert a byte slice to an array of u32
     fn to_u32_array<const N: usize>(bytes: &[u8], err: InvalidLength) -> Result<[u32; N], InvalidLength> {
-        // I should be checking here but I'm going down a rabbit hole
-        if bytes.len() != N * 4 {
+        if bytes.len() / 4 > N || !bytes.len().is_multiple_of(4) {
             return Err(err);
         }
         let mut arr = [0u32; N];

@@ -14,7 +14,7 @@ mod chacha;
 // this will print the keystream.
 // I did not understand if you wanted 64 or 128 bytes of the keystream,
 // anyway just change this value:
-const KEYSTREAM_BYTES: usize = 128;
+const KEYSTREAM_BYTES: usize = 64;
 // and you will get the first KEYSTREAM_BYTES of the keystream.
 
 
@@ -29,7 +29,8 @@ mod tests {
         let constant = b"DanceOfRaloberon";
         let counter = 0x0401;
         let nonce = b"FenceOrDance";
-        let key = hex!("330146455a0009591655451707015e12000e59150d0b4d474453541412000000");
+        let key = hex!("8a930a960c7d973e8b34aae1767cc34ef160865650df1ed78581eb6ec8000000");
+
 
         let mut cipher = ChaCha::<20, IETF>::new(
             &key,
@@ -38,8 +39,7 @@ mod tests {
             Some(constant),
         )?;
         let keystream = Output(cipher.keystream(KEYSTREAM_BYTES));
-
-        println!("Keystream: {}", keystream);
+        println!("Keystream: {}, bytes: {}", keystream, keystream.as_bytes().len());
 
         Ok(())
     }
@@ -67,7 +67,7 @@ mod tests {
         let nonce = [0x24; 8];
         let plaintext = hex!("00010203 04050607 08090A0B 0C0D0E0F");
 
-        let mut cipher = ChaCha::<8, Original>::new(&key, &nonce, None, None)?;
+        let mut cipher = ChaCha::<20, Original>::new(&key, &nonce, None, None)?;
 
         let output = cipher.encrypt(&plaintext);
 
@@ -85,7 +85,8 @@ mod tests {
 
         let plaintext = b"Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
 
-        let mut cipher = ChaCha::<20, IETF>::new(&key, &nonce, Some(counter), None)?;
+        let constant = b"expand 32-byte k";
+        let mut cipher = ChaCha::<20, IETF>::new(&key, &nonce, Some(counter), Some(constant))?;
         let output = cipher.encrypt(plaintext);
         let expected_ciphertext = hex!("6e2e359a2568f98041ba0728dd0d6981e97e7aec1d4360c20a27afccfd9fae0bf91b65c5524733ab8f593dabcd62b3571639d624e65152ab8f530c359f0861d807ca0dbf500d6a6156a38e088a22b65e52bc514d16ccf806818ce91ab77937365af90bbf74a35be6b40b8eedf2785e42874d");
 
