@@ -168,6 +168,7 @@ public class OCB_AES {
         long[] stretch = new long[3];
 
         // Ktop[1..64] xor Ktop[9..72]
+        // BUG: fixed offset signs via & 0xFF
         for (int i = 0; i < 8; i++) {
             stretch[0] |= (((long) offset[i]) & 0xFF)  << (56 - (i << 3));
             stretch[1] |= (((long) offset[i + 8]) & 0xFF)  << (56 - (i << 3));
