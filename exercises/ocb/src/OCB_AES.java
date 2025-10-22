@@ -140,18 +140,32 @@ public class OCB_AES {
 
     public byte[] process(byte[] N, byte[] A, byte[] P) throws Exception {
         hash(A);
+
+        // BUG: if plaintext is <= 16 bytes and decrypting, access to P[-1]
         int plen = P.length;
         if (decrypt) {
             plen -= 16;
         }
+
         byte[] C = new byte[plen + 16];
         byte[] nonce = new byte[16];
+
+        // Fine since this code only supports 128 bit nonces
         nonce[15 - N.length] = 1;
         arraycopy(N, 0, nonce, 16 - N.length, N.length);
+
+        // we take just the bottom 6 bits
         int bottom = nonce[15] & 0x3f;
+        // clear bottom 6 bits
         nonce[15] &= (byte) 0xc0;
+
+        // Ktop = ENCIPHER(K, Nonce[1..122] || 0^6
         cipher.processBlock(nonce, 0, offset, 0);
+
+        // stretch = Ktop || (Ktop[1..64] xor Ktop[9..72])
         long[] stretch = new long[3];
+
+        // Ktop[1..64] xor Ktop[9..72]
         for (int i = 0; i < 8; i++) {
             stretch[0] |= (long) offset[i]  << (56 - (i << 3));
             stretch[1] |= (long) offset[i + 8]  << (56 - (i << 3));
@@ -163,6 +177,7 @@ public class OCB_AES {
         for (int i = 0; i < 16; i++) {
             offset[i] = (byte) (stretch[i >> 3] >>> (56 - ((i & 7) << 3)));
         }
+
         final byte[] c_in = new byte[16];
         for (int i = 0; i < plen - 15; i += 16) {
             for (int j = 0; j < 16; j++) {
@@ -194,18 +209,22 @@ public class OCB_AES {
         cipher.processBlock(checksum, 0, C, plen);
         return C;
     }
+
+    // BUG: timing attack
     public boolean check_tag(byte[] o_tag, byte[] r_tag) {
-        if (r_tag.length != o_tag.length) {
-            return  false;
+        boolean res = o_tag.length == r_tag.length;
+
+        int len = Math.max(o_tag.length, r_tag.length);
+        for (int i = 0; i < len; i++) {
+//            if (o_tag[i % o_tag.length] != r_tag[i % r_tag.length]) {
+//                res = false;
+//            }
+            res = o_tag[i % o_tag.length] == r_tag[i % r_tag.length];
         }
-        for (int i = 0; i < o_tag.length; i++) {
-            if (o_tag[i] != r_tag[i]) {
-                return false;
-            }
-        }
-        return true;
+        return res;
     }
-    public static void printhex(byte[] bb) {
+
+    public static void printHex(byte[] bb) {
         for (byte b : bb) {
             // pad with 0
             System.out.printf("%02X", b);
@@ -214,7 +233,7 @@ public class OCB_AES {
         System.out.println();
     }
     public static void main(String[] args) throws Exception {
-        printhex(new OCB_AES(false,
+        printHex(new OCB_AES(false,
                 // Key
                 java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F")
         ).process(
