@@ -174,7 +174,7 @@ public class OCB_AES {
             stretch[2] |= (((long) (offset[i] ^ offset[i + 1])) & 0xFF) << (56 - (i << 3));
         }
 
-        //BUG: with bottom == 0, 64 bit shift behaves like 0 shift
+        // BUG: with bottom == 0, 64 bit shift behaves like 0 shift
         // which mixes up the values instead of leaving them unchanged
         if (bottom != 0) {
             for (int i = 0; i < 2; i++) {
