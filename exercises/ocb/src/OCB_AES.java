@@ -4,10 +4,6 @@ import static java.lang.System.*;
 
 public class OCB_AES {
     private final byte[][] L;
-    // Add L_* and L_dollar for ease of use
-    private final byte[] L_ast;
-    private final byte[] L_dollar;
-
     private final byte[] sum;
     private final byte[] offset;
     private final byte[] checksum;
@@ -21,11 +17,10 @@ public class OCB_AES {
         sum = new byte[16];
         final int MAX_LOG_MESSAGES = 64;
         L = new byte[MAX_LOG_MESSAGES][16];
-        L_ast = new byte[16];
 
         cipher = new AES();
         cipher.init(true, key);
-        cipher.processBlock(new byte[16], 0, L_ast, 0);
+        cipher.processBlock(new byte[16], 0, L[0], 0);
 
         this.decrypt = decrypt;
         if (decrypt) {
@@ -36,10 +31,14 @@ public class OCB_AES {
         }
 
         // BUG: Fixed out of bounds
-        L_dollar = dbl(L_ast);
-        L[0] = dbl(L_dollar);
-        for (int i = 1; i < MAX_LOG_MESSAGES; i++) {
-            L[i] = dbl(L[i - 1]);
+//        L_dollar = dbl(L_ast);
+//        L[0] = dbl(L_dollar);
+//        for (int i = 1; i < MAX_LOG_MESSAGES; i++) {
+//            L[i] = dbl(L[i - 1]);
+//        }
+
+        for (int i = 0; i < MAX_LOG_MESSAGES - 1; i++) {
+            L[i + 1] = dbl(L[i]);
         }
     }
 
@@ -77,7 +76,8 @@ public class OCB_AES {
             // Offset_i = Offset_{i-1} XOR L_{ntz(i)}
             for (int j = 0; j < 16; j++) {
                 // BUG: ntz(0) is faulty
-                offset[j] ^= L[ntz(i + 1)][j];
+                // Moreover, it should be L[ntz(i + 1) + 2]
+                offset[j] ^= L[ntz(i + 1) + 2][j];
 
                 // A_i xor Offset_i
                 c_in[j] = (byte) (A[(i << 4) + j] ^ offset[j]);
@@ -102,9 +102,9 @@ public class OCB_AES {
 //
 //            // CipherInput = (A_* || 1 || zeros(127 - bitlength(A_*))) XOR Offset_*
 //            // TODO: should this be with 0x80 or 1?
-//            c_in[rem_bytes] = (byte) (0x80 ^ offset[rem_bytes] ^ L_ast[rem_bytes]);
+//            c_in[rem_bytes] = (byte) (0x80 ^ offset[rem_bytes] ^ L[0][rem_bytes]);
 //            for (int i = rem_bytes + 1; i < 16; i++) {
-//                c_in[i] = (byte) (offset[i] ^ L_ast[i]);
+//                c_in[i] = (byte) (offset[i] ^ L[0][i]);
 //            }
 //
 //            // c_out = ENCIPHER(K, CipherInput)
@@ -119,7 +119,7 @@ public class OCB_AES {
         if (rem_bytes > 0) {
             byte[] offset_star = new byte[16];
             for (int j = 0; j < 16; j++) {
-                offset_star[j] = (byte) (offset[j] ^ L_ast[j]);
+                offset_star[j] = (byte) (offset[j] ^ L[0][j]);
             }
 
             for (int i = 0; i < rem_bytes; i++) {
@@ -180,33 +180,73 @@ public class OCB_AES {
 
         final byte[] c_in = new byte[16];
         for (int i = 0; i < plen - 15; i += 16) {
+            int li = ntz((i >>> 4) + 1) + 2;
             for (int j = 0; j < 16; j++) {
-                offset[j] ^= L[ntz((i >>> 4) + 1) + 2][j];
+                offset[j] ^= L[li][j];
                 c_in[j] = (byte) (P[i + j] ^ offset[j]);
             }
+
+            // This is either encryption or decryption
             bid_cipher.processBlock(c_in, 0, C, i);
             for (int j = 0; j < 16; j++) {
                 C[i + j] ^= offset[j];
                 checksum[j] ^= P[i + j];
             }
         }
+
         int rem_bytes = plen & 0xf;
+        int full_blocks = plen & 0xfffffff0;
+
         if (rem_bytes > 0) {
+            // Offset_* = Offset_m xor L_*
             for (int j = 0; j < 16; j++) {
                 offset[j] ^= L[0][j];
             }
+            // c_in <- PAD = ENCIPHER(K, Offset_*)
             cipher.processBlock(offset, 0, c_in, 0);
+
+            // C_* = P_* xor Pad[1..bitlen(P_*)]
             for (int j = 0; j < rem_bytes; j++) {
-                C[(plen & 0xfffffff0) + j] = (byte) (c_in[j] ^ P[(plen & 0xfffffff0) + j]);
-                checksum[j] ^= (byte) (offset[j] ^ L[1][j]);
-                checksum[j] ^= P[(plen & 0xfffffff0) + j];
+                C[full_blocks + j] = (byte) (c_in[j] ^ P[full_blocks + j]);
+                checksum[j] ^= P[full_blocks + j];
             }
-            checksum[rem_bytes] ^= (byte) 1;
+
+            // Checksum_* = Checksum_m xor (P_* || 1 || zeros(127 - bitlength(P_*)))
+
+
+
+            for (int j = 0; j < rem_bytes; j++) {
+                checksum[j] ^= (byte) (offset[j] ^ L[1][j]);
+            }
+
+//            for (int j = 0; j < rem_bytes; j++) {
+//                checksum[j] ^= P[full_blocks + j];
+//            }
+//
+//            // TODO: 1 or 0x80?
+//            checksum[rem_bytes] ^= (byte) 0x80;
         }
-        for (int i = rem_bytes; i < 16; i++) {
+
+        // TAG computation
+        for (int i = 0; i < 16; i++) {
             checksum[i] ^= (byte) (offset[i] ^ L[1][i]);
         }
-        cipher.processBlock(checksum, 0, C, plen);
+
+        // Tag = ENCIPHER(K, Checksum_* xor Offset_* xor L_$) xor HASH(K,A)
+        byte[] tag = new byte[16];
+        cipher.processBlock(checksum, 0, tag, 0);
+        for (int j = 0; j < 16; j++) {
+            tag[j] ^= sum[j]; // sum = HASH(K,A)
+        }
+
+        System.arraycopy(tag, 0, C, plen, 16);
+
+//        cipher.processBlock(checksum, 0, C, plen);
+//
+//        for (int i = plen; i < plen + 16; i++) {
+//            C[i] ^= sum[i - plen];
+//        }
+
         return C;
     }
 
@@ -216,10 +256,9 @@ public class OCB_AES {
 
         int len = Math.max(o_tag.length, r_tag.length);
         for (int i = 0; i < len; i++) {
-//            if (o_tag[i % o_tag.length] != r_tag[i % r_tag.length]) {
-//                res = false;
-//            }
-            res = o_tag[i % o_tag.length] == r_tag[i % r_tag.length];
+            if (o_tag[i % o_tag.length] != r_tag[i % r_tag.length]) {
+                res = false;
+            }
         }
         return res;
     }
@@ -232,6 +271,7 @@ public class OCB_AES {
         // new line for clarity
         System.out.println();
     }
+
     public static void main(String[] args) throws Exception {
         printHex(new OCB_AES(false,
                 // Key
