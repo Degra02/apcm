@@ -31,12 +31,6 @@ public class OCB_AES {
         }
 
         // BUG: Fixed out of bounds
-//        L_dollar = dbl(L_ast);
-//        L[0] = dbl(L_dollar);
-//        for (int i = 1; i < MAX_LOG_MESSAGES; i++) {
-//            L[i] = dbl(L[i - 1]);
-//        }
-
         for (int i = 0; i < MAX_LOG_MESSAGES - 1; i++) {
             L[i + 1] = dbl(L[i]);
         }
@@ -76,7 +70,7 @@ public class OCB_AES {
             // Offset_i = Offset_{i-1} XOR L_{ntz(i)}
             for (int j = 0; j < 16; j++) {
                 // BUG: ntz(0) is faulty
-                // Moreover, it should be L[ntz(i + 1) + 2]
+                // BUG: Moreover, it should be L[ntz(i + 1) + 2]
                 offset[j] ^= L[ntz(i + 1) + 2][j];
 
                 // A_i xor Offset_i
@@ -101,7 +95,7 @@ public class OCB_AES {
             }
 
             // CipherInput = (A_* || 1 || zeros(127 - bitlength(A_*))) XOR Offset_*
-            // TODO: should this be with 0x80 or 1?
+            // BUG: 1 is wrong, should be 0x80
             c_in[rem_bytes] = (byte) (0x80 ^ offset[rem_bytes] ^ L[0][rem_bytes]);
             for (int i = rem_bytes + 1; i < 16; i++) {
                 c_in[i] = (byte) (offset[i] ^ L[0][i]);
@@ -113,29 +107,6 @@ public class OCB_AES {
                 sum[j] ^= c_out[j];
             }
         }
-
-//        // Cleaner version, following RFC pseudocode
-//        int rem_bytes = A.length & 0xF;
-//        if (rem_bytes > 0) {
-//            byte[] offset_star = new byte[16];
-//            for (int j = 0; j < 16; j++) {
-//                offset_star[j] = (byte) (offset[j] ^ L[0][j]);
-//            }
-//
-//            for (int i = 0; i < rem_bytes; i++) {
-//                c_in[i] = (byte) (A[(m << 4) + i] ^ offset_star[i]);
-//            }
-//            c_in[rem_bytes] = (byte) (0x80 ^ offset_star[rem_bytes]);
-//            System.arraycopy(offset_star, rem_bytes + 1, c_in, rem_bytes + 1, 16 - (rem_bytes + 1));
-//
-//            // c_out = ENCIPHER(K, c_in)
-//            cipher.processBlock(c_in, 0, c_out, 0);
-//
-//            // Sum = Sum_m XOR c_out
-//            for (int j = 0; j < 16; j++) {
-//                sum[j] ^= c_out[j];
-//            }
-//        }
     }
 
     public byte[] process(byte[] N, byte[] A, byte[] P) throws Exception {
@@ -231,6 +202,7 @@ public class OCB_AES {
             tag[j] ^= sum[j]; // sum = HASH(K,A)
         }
 
+        // BUG: implementation was missing tag appending
         // Append tag to ciphertext
         System.arraycopy(tag, 0, C, plen, 16);
 
@@ -265,12 +237,12 @@ public class OCB_AES {
                 java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F")
         ).process(
                 // Nonce, can be 0 length
-                java.util.HexFormat.of().parseHex("BBAA9988776655443322110F"),
+                java.util.HexFormat.of().parseHex("BBAA9988776655443322110D"),
                 // Associated Data, any length
-                java.util.HexFormat.of().parseHex(""),
+                java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627"),
                 // Plaintext, any length
                 java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627")
         ));
-        System.out.println("4412923493C57D5DE0D700F753CCE0D1D2D95060122E9F15A5DDBFC5787E50B5CC55EE507BCB084E479AD363AC366B95A98CA5F3000B1479");
+        System.out.println("D5CA91748410C1751FF8A2F618255B68A0A12E093FF454606E59F9C1D0DDC54B65E8628E568BAD7AED07BA06A4A69483A7035490C5769E60");
     }
 }
