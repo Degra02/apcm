@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.Arrays;
 
 import static java.lang.System.*;
 
@@ -110,9 +111,17 @@ public class OCB_AES {
     }
 
     public byte[] process(byte[] N, byte[] A, byte[] P) throws Exception {
+        Arrays.fill(offset, (byte)0);
+        Arrays.fill(checksum, (byte)0);
+        Arrays.fill(sum, (byte)0);
+
         hash(A);
 
-        // BUG: if plaintext is <= 16 bytes and decrypting, access to P[-1]
+        if (decrypt && P.length < 16) {
+            throw new IllegalArgumentException("ciphertext too short (no tag)");
+        }
+
+        // BUG: if plaintext is <= 16 bytes and decrypting, access to negative index
         // TODO: fix this
         int plen = P.length;
         if (decrypt) {
@@ -231,9 +240,7 @@ public class OCB_AES {
 
         int len = Math.max(o_tag.length, r_tag.length);
         for (int i = 0; i < len; i++) {
-            if (o_tag[i % o_tag.length] != r_tag[i % r_tag.length]) {
-                res = false;
-            }
+            res &= (o_tag[i % o_tag.length] == r_tag[i % r_tag.length]);
         }
         return res;
     }
@@ -249,9 +256,9 @@ public class OCB_AES {
 
     public static void main(String[] args) throws Exception {
         byte[] key = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F");
-        byte[] nonce = java.util.HexFormat.of().parseHex("BBAA99887766554433221104");
+        byte[] nonce = java.util.HexFormat.of().parseHex("BBAA99887766554433221105");
         byte[] associatedData = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F");
-        byte[] plaintext = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F");
+        byte[] plaintext = java.util.HexFormat.of().parseHex("AA");
 
         OCB_AES enc = new OCB_AES(false,
                 key
@@ -266,21 +273,20 @@ public class OCB_AES {
                 plaintext
         );
         printHex(ciphertext);
-        System.out.println("571D535B60B277188BE5147170A9A22C3AD7A4FF3835B8C5701C1CCEC8FC3358");
 
-//        OCB_AES dec = new OCB_AES(true,
-//                key
-//        );
-//
-//        byte[] decrypted = dec.process(
-//                // Nonce, can be 0 length
-//                nonce,
-//                // Associated Data, any length
-//                associatedData,
-//                // Ciphertext + Tag, any length
-//                ciphertext
-//        );
-//
-//        printHex(decrypted);
+        OCB_AES dec = new OCB_AES(true,
+                key
+        );
+
+        byte[] decrypted = dec.process(
+                // Nonce, can be 0 length
+                nonce,
+                // Associated Data, any length
+                associatedData,
+                // Ciphertext + Tag, any length
+                ciphertext
+        );
+
+        printHex(decrypted);
     }
 }
