@@ -113,6 +113,7 @@ public class OCB_AES {
         hash(A);
 
         // BUG: if plaintext is <= 16 bytes and decrypting, access to P[-1]
+        // TODO: fix this
         int plen = P.length;
         if (decrypt) {
             plen -= 16;
@@ -202,6 +203,20 @@ public class OCB_AES {
             tag[j] ^= sum[j]; // sum = HASH(K,A)
         }
 
+        // BUG: missing tag verification
+        if (decrypt) {
+            byte[] received_tag = new byte[16];
+            arraycopy(P, plen, received_tag, 0, 16);
+            if (!check_tag(tag, received_tag)) {
+                throw new Exception("Tag mismatch!");
+            }
+
+            // return C without tag
+            byte[] C_no_tag = new byte[plen];
+            arraycopy(C, 0, C_no_tag, 0, plen);
+            return C_no_tag;
+        }
+
         // BUG: implementation was missing tag appending
         // Append tag to ciphertext
         System.arraycopy(tag, 0, C, plen, 16);
@@ -232,17 +247,39 @@ public class OCB_AES {
     }
 
     public static void main(String[] args) throws Exception {
-        printHex(new OCB_AES(false,
-                // Key
-                java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F")
-        ).process(
+        byte[] key = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F");
+        byte[] nonce = java.util.HexFormat.of().parseHex("BBAA9988776655443322110D");
+        byte[] associatedData = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627");
+        byte[] plaintext = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627");
+
+        OCB_AES enc = new OCB_AES(false,
+                key
+        );
+
+        byte[] ciphertext = enc.process(
                 // Nonce, can be 0 length
                 java.util.HexFormat.of().parseHex("BBAA9988776655443322110D"),
                 // Associated Data, any length
                 java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627"),
                 // Plaintext, any length
                 java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627")
-        ));
+        );
+        printHex(ciphertext);
         System.out.println("D5CA91748410C1751FF8A2F618255B68A0A12E093FF454606E59F9C1D0DDC54B65E8628E568BAD7AED07BA06A4A69483A7035490C5769E60");
+//
+//        OCB_AES dec = new OCB_AES(true,
+//                key
+//        );
+//
+//        byte[] decrypted = dec.process(
+//                // Nonce, can be 0 length
+//                nonce,
+//                // Associated Data, any length
+//                associatedData,
+//                // Ciphertext + Tag, any length
+//                ciphertext
+//        );
+//
+//        printHex(decrypted);
     }
 }
