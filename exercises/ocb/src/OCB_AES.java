@@ -59,7 +59,8 @@ public class OCB_AES {
 
     ///  Number of trailing zeroes
     private int ntz(int i) {
-        assert i != 0;
+        // I miss Rust
+        if (i == 0) throw new SecurityException("Tag mismatch!");
         int n = 0;
         while ((i & 1) == 0) {
             i >>>= 1;
