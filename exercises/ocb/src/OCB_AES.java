@@ -191,6 +191,7 @@ public class OCB_AES {
         }
 
         // TAG computation
+        // BUG: this should start from 0
         for (int i = 0; i < 16; i++) {
             checksum[i] ^= (byte) (offset[i] ^ L[1][i]);
         }
@@ -248,9 +249,9 @@ public class OCB_AES {
 
     public static void main(String[] args) throws Exception {
         byte[] key = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F");
-        byte[] nonce = java.util.HexFormat.of().parseHex("BBAA9988776655443322110D");
-        byte[] associatedData = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627");
-        byte[] plaintext = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627");
+        byte[] nonce = java.util.HexFormat.of().parseHex("BBAA99887766554433221104");
+        byte[] associatedData = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F");
+        byte[] plaintext = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F");
 
         OCB_AES enc = new OCB_AES(false,
                 key
@@ -258,15 +259,15 @@ public class OCB_AES {
 
         byte[] ciphertext = enc.process(
                 // Nonce, can be 0 length
-                java.util.HexFormat.of().parseHex("BBAA9988776655443322110D"),
+                nonce,
                 // Associated Data, any length
-                java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627"),
+                associatedData,
                 // Plaintext, any length
-                java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627")
+                plaintext
         );
         printHex(ciphertext);
-        System.out.println("D5CA91748410C1751FF8A2F618255B68A0A12E093FF454606E59F9C1D0DDC54B65E8628E568BAD7AED07BA06A4A69483A7035490C5769E60");
-//
+        System.out.println("571D535B60B277188BE5147170A9A22C3AD7A4FF3835B8C5701C1CCEC8FC3358");
+
 //        OCB_AES dec = new OCB_AES(true,
 //                key
 //        );
