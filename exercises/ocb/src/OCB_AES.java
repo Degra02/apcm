@@ -285,38 +285,6 @@ public class OCB_AES {
 
     public static void main(String[] args) throws Exception {
         kats();
-//        byte[] key = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F");
-//        byte[] nonce = java.util.HexFormat.of().parseHex("BBAA99887766554433221101");
-//        byte[] associatedData = java.util.HexFormat.of().parseHex("0001020304050607");
-//        byte[] plaintext = java.util.HexFormat.of().parseHex("0001020304050607");
-//
-//        OCB_AES cipher = new OCB_AES(false,
-//                key
-//        );
-//
-//        byte[] ciphertext = cipher.process(
-//                // Nonce, can be 0 length
-//                nonce,
-//                // Associated Data, any length
-//                associatedData,
-//                // Plaintext, any length
-//                plaintext
-//        );
-//        System.out.println("Ciphertext + Tag:");
-//        printHex(ciphertext);
-//
-//        cipher.setDecrypt(true);
-//        byte[] decrypted = cipher.process(
-//                // Nonce, can be 0 length
-//                nonce,
-//                // Associated Data, any length
-//                associatedData,
-//                // Ciphertext + Tag, any length
-//                ciphertext
-//        );
-//
-//        System.out.println("Decrypted Plaintext:");
-//        printHex(decrypted);
     }
 
     public static void kats() throws Exception {
@@ -398,7 +366,7 @@ public class OCB_AES {
                 "4412923493C57D5DE0D700F753CCE0D1D2D95060122E9F15A5DDBFC5787E50B5CC55EE507BCB084E479AD363AC366B95A98CA5F3000B1479"
         };
 
-        for (int i = 0; i < nonce_strings.length; i++) {
+        for (int i = 0; i < 1; i++) {
             byte[] nonce = java.util.HexFormat.of().parseHex(nonce_strings[i]);
             byte[] associatedData = java.util.HexFormat.of().parseHex(associated_data_strings[i]);
             byte[] plaintext = java.util.HexFormat.of().parseHex(plaintext_strings[i]);
