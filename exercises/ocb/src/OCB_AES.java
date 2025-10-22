@@ -173,9 +173,15 @@ public class OCB_AES {
             stretch[1] |= (((long) offset[i + 8]) & 0xFF)  << (56 - (i << 3));
             stretch[2] |= (((long) (offset[i] ^ offset[i + 1])) & 0xFF) << (56 - (i << 3));
         }
-        for (int i = 0; i < 2; i++) {
-            stretch[i] = (stretch[i] << bottom) | (stretch[i + 1] >>> (64 - bottom));
+
+        //BUG: with bottom == 0, 64 bit shift behaves like 0 shift
+        // which mixes up the values instead of leaving them unchanged
+        if (bottom != 0) {
+            for (int i = 0; i < 2; i++) {
+                stretch[i] = (stretch[i] << bottom) | (stretch[i + 1] >>> (64 - bottom));
+            }
         }
+
         for (int i = 0; i < 16; i++) {
             offset[i] = (byte) (stretch[i >> 3] >>> (56 - ((i & 7) << 3)));
         }
@@ -249,6 +255,7 @@ public class OCB_AES {
         }
 
         // BUG: missing tag verification
+        // fixed below
         if (decrypt) {
             assert receivedTag != null;
             if (!check_tag(receivedTag, computed_tag)) {
@@ -366,7 +373,7 @@ public class OCB_AES {
                 "4412923493C57D5DE0D700F753CCE0D1D2D95060122E9F15A5DDBFC5787E50B5CC55EE507BCB084E479AD363AC366B95A98CA5F3000B1479"
         };
 
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < nonce_strings.length; i++) {
             byte[] nonce = java.util.HexFormat.of().parseHex(nonce_strings[i]);
             byte[] associatedData = java.util.HexFormat.of().parseHex(associated_data_strings[i]);
             byte[] plaintext = java.util.HexFormat.of().parseHex(plaintext_strings[i]);
