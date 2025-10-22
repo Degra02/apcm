@@ -10,7 +10,12 @@ public class OCB_AES {
     private final byte[] checksum;
     private final AES cipher;
     private final AES bid_cipher;
-    private final boolean decrypt;
+
+    private boolean decrypt;
+
+    public void setDecrypt(boolean decrypt) {
+        this.decrypt = decrypt;
+    }
 
     public OCB_AES(boolean decrypt, byte[] key) throws IOException {
         checksum = new byte[16];
@@ -279,11 +284,11 @@ public class OCB_AES {
         byte[] associatedData = java.util.HexFormat.of().parseHex("0001020304050607");
         byte[] plaintext = java.util.HexFormat.of().parseHex("0001020304050607");
 
-        OCB_AES enc = new OCB_AES(false,
+        OCB_AES cipher = new OCB_AES(false,
                 key
         );
 
-        byte[] ciphertext = enc.process(
+        byte[] ciphertext = cipher.process(
                 // Nonce, can be 0 length
                 nonce,
                 // Associated Data, any length
@@ -291,13 +296,11 @@ public class OCB_AES {
                 // Plaintext, any length
                 plaintext
         );
+        System.out.println("Ciphertext + Tag:");
         printHex(ciphertext);
 
-        OCB_AES dec = new OCB_AES(true,
-                key
-        );
-
-        byte[] decrypted = dec.process(
+        cipher.setDecrypt(true);
+        byte[] decrypted = cipher.process(
                 // Nonce, can be 0 length
                 nonce,
                 // Associated Data, any length
@@ -306,6 +309,7 @@ public class OCB_AES {
                 ciphertext
         );
 
+        System.out.println("Decrypted Plaintext:");
         printHex(decrypted);
     }
 }
