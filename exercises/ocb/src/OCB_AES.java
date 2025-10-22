@@ -122,10 +122,20 @@ public class OCB_AES {
         }
 
         // BUG: if plaintext is <= 16 bytes and decrypting, access to negative index
-        // TODO: fix this
-        int plen = P.length;
+        int plen;
+        byte[] inBuf;
+        byte[] outBuf;
+        byte[] receivedTag = null;
+
         if (decrypt) {
-            plen -= 16;
+            plen = P.length - 16;
+            inBuf = Arrays.copyOfRange(P, 0, plen); // ciphertext-only
+            receivedTag = Arrays.copyOfRange(P, plen, P.length);
+            outBuf = new byte[plen]; // plaintext output
+        } else {
+            plen = P.length;
+            inBuf = P; // plaintext input
+            outBuf = new byte[plen + 16]; // ciphertext + tag output
         }
 
         byte[] C = new byte[plen + 16];
@@ -142,8 +152,6 @@ public class OCB_AES {
 
         // Ktop = ENCIPHER(K, Nonce[1..122] || 0^6
         cipher.processBlock(nonce, 0, offset, 0);
-        byte[] Ktop = new byte[16];
-        arraycopy(offset, 0, Ktop, 0, 16);
 
         // stretch = Ktop || (Ktop[1..64] xor Ktop[9..72])
         long[] stretch = new long[3];
@@ -163,6 +171,7 @@ public class OCB_AES {
         }
 
         final byte[] c_in = new byte[16];
+        final byte[] tmp_out = new byte[16];
         for (int i = 0; i < plen - 15; i += 16) {
             int li = ntz((i >>> 4) + 1) + 2;
 
@@ -172,10 +181,18 @@ public class OCB_AES {
             }
 
             // This is either encryption or decryption
-            bid_cipher.processBlock(c_in, 0, C, i);
-            for (int j = 0; j < 16; j++) {
-                C[i + j] ^= offset[j];
-                checksum[j] ^= P[i + j];
+            bid_cipher.processBlock(c_in, 0, tmp_out, i);
+
+            if (!decrypt) {
+                for (int j = 0; j < 16; j++) {
+                    C[i + j] = (byte) (tmp_out[j] ^ offset[j]);
+                    checksum[j] ^= inBuf[i + j];
+                }
+            } else {
+                for (int j = 0; j < 16; j++) {
+                    outBuf[i + j] = (byte) (tmp_out[j] ^ offset[j]);
+                    checksum[j] ^= outBuf[i + j];
+                }
             }
         }
 
@@ -184,54 +201,56 @@ public class OCB_AES {
 
         if (rem_bytes > 0) {
             // Offset_* = Offset_m xor L_*
-            for (int j = 0; j < 16; j++) {
-                offset[j] ^= L[0][j];
-            }
+            for (int j = 0; j < 16; j++) offset[j] ^= L[0][j];
+
             // c_in <- PAD = ENCIPHER(K, Offset_*)
             cipher.processBlock(offset, 0, c_in, 0);
 
-            // C_* = P_* xor Pad[1..bitlen(P_*)]
-            for (int j = 0; j < rem_bytes; j++) {
-                C[full_blocks + j] = (byte) (c_in[j] ^ P[full_blocks + j]);
-                checksum[j] ^= P[full_blocks + j];
+            if (!decrypt) {
+                // C_* = P_* xor Pad[1..bitlen(P_*)]
+                for (int j = 0; j < rem_bytes; j++) {
+                    C[full_blocks + j] = (byte) (c_in[j] ^ inBuf[full_blocks + j]);
+                    checksum[j] ^= inBuf[full_blocks + j];
+                }
+            } else {
+                // P_* = C_* xor Pad[1..bitlen(C_*)]
+                for (int j = 0; j < rem_bytes; j++) {
+                    outBuf[full_blocks + j] = (byte) (c_in[j] ^ inBuf[full_blocks + j]);
+                    checksum[j] ^= outBuf[full_blocks + j];
+                }
             }
+
             // Bug: this was 1, should be 0x80
             checksum[rem_bytes] ^= (byte) 0x80;
         }
 
         // TAG computation
-        // BUG: this should start from 0
+        // BUG: this should start from 0, not rem_bytes
         for (int i = 0; i < 16; i++) {
             checksum[i] ^= (byte) (offset[i] ^ L[1][i]);
         }
 
         // Tag = ENCIPHER(K, Checksum_* xor Offset_* xor L_$) xor HASH(K,A)
-        byte[] tag = new byte[16];
-        cipher.processBlock(checksum, 0, tag, 0);
+        byte[] computed_tag = new byte[16];
+        cipher.processBlock(checksum, 0, computed_tag, 0);
 
         for (int j = 0; j < 16; j++) {
-            tag[j] ^= sum[j]; // sum = HASH(K,A)
+            computed_tag[j] ^= sum[j]; // sum = HASH(K,A)
         }
 
         // BUG: missing tag verification
         if (decrypt) {
-            byte[] received_tag = new byte[16];
-            arraycopy(P, plen, received_tag, 0, 16);
-            if (!check_tag(tag, received_tag)) {
-                throw new Exception("Tag mismatch!");
+            if (!check_tag(receivedTag, computed_tag)) {
+                throw new SecurityException("Tag mismatch!");
             }
+            return outBuf;
+        } else {
+            // BUG: implementation was missing tag appending
+            // Append tag to ciphertext
+            System.arraycopy(computed_tag, 0, C, plen, 16);
 
-            // return C without tag
-            byte[] C_no_tag = new byte[plen];
-            arraycopy(C, 0, C_no_tag, 0, plen);
-            return C_no_tag;
+            return C;
         }
-
-        // BUG: implementation was missing tag appending
-        // Append tag to ciphertext
-        System.arraycopy(tag, 0, C, plen, 16);
-
-        return C;
     }
 
     // BUG: timing attack
@@ -256,9 +275,9 @@ public class OCB_AES {
 
     public static void main(String[] args) throws Exception {
         byte[] key = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F");
-        byte[] nonce = java.util.HexFormat.of().parseHex("BBAA99887766554433221105");
-        byte[] associatedData = java.util.HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F");
-        byte[] plaintext = java.util.HexFormat.of().parseHex("AA");
+        byte[] nonce = java.util.HexFormat.of().parseHex("BBAA99887766554433221101");
+        byte[] associatedData = java.util.HexFormat.of().parseHex("0001020304050607");
+        byte[] plaintext = java.util.HexFormat.of().parseHex("0001020304050607");
 
         OCB_AES enc = new OCB_AES(false,
                 key
