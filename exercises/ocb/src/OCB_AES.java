@@ -93,49 +93,49 @@ public class OCB_AES {
 
         // Processing of remaining block
         // A_* is used to denote the last partial block (in RFC)
-//        int rem_bytes = A.length & 0xF;
-//        if (rem_bytes > 0){
-//            // Offset_* = Offset_m XOR L_*
-//            for (int i = 0; i < rem_bytes; i++) {
-//                c_in[i] = (byte) (A[(m << 4) + i] ^ offset[i] ^ L_ast[i]);
-//            }
-//
-//            // CipherInput = (A_* || 1 || zeros(127 - bitlength(A_*))) XOR Offset_*
-//            // TODO: should this be with 0x80 or 1?
-//            c_in[rem_bytes] = (byte) (0x80 ^ offset[rem_bytes] ^ L[0][rem_bytes]);
-//            for (int i = rem_bytes + 1; i < 16; i++) {
-//                c_in[i] = (byte) (offset[i] ^ L[0][i]);
-//            }
-//
-//            // c_out = ENCIPHER(K, CipherInput)
-//            cipher.processBlock(c_in, 0, c_out, 0);
-//            for (int j = 0; j < 16; j++) {
-//                sum[j] ^= c_out[j];
-//            }
-//        }
-
-        // Cleaner version, following RFC pseudocode
         int rem_bytes = A.length & 0xF;
-        if (rem_bytes > 0) {
-            byte[] offset_star = new byte[16];
-            for (int j = 0; j < 16; j++) {
-                offset_star[j] = (byte) (offset[j] ^ L[0][j]);
-            }
-
+        if (rem_bytes > 0){
+            // Offset_* = Offset_m XOR L_*
             for (int i = 0; i < rem_bytes; i++) {
-                c_in[i] = (byte) (A[(m << 4) + i] ^ offset_star[i]);
+                c_in[i] = (byte) (A[(m << 4) + i] ^ offset[i] ^ L[0][i]);
             }
-            c_in[rem_bytes] = (byte) (0x80 ^ offset_star[rem_bytes]);
-            System.arraycopy(offset_star, rem_bytes + 1, c_in, rem_bytes + 1, 16 - (rem_bytes + 1));
 
-            // c_out = ENCIPHER(K, c_in)
+            // CipherInput = (A_* || 1 || zeros(127 - bitlength(A_*))) XOR Offset_*
+            // TODO: should this be with 0x80 or 1?
+            c_in[rem_bytes] = (byte) (0x80 ^ offset[rem_bytes] ^ L[0][rem_bytes]);
+            for (int i = rem_bytes + 1; i < 16; i++) {
+                c_in[i] = (byte) (offset[i] ^ L[0][i]);
+            }
+
+            // c_out = ENCIPHER(K, CipherInput)
             cipher.processBlock(c_in, 0, c_out, 0);
-
-            // Sum = Sum_m XOR c_out
             for (int j = 0; j < 16; j++) {
                 sum[j] ^= c_out[j];
             }
         }
+
+//        // Cleaner version, following RFC pseudocode
+//        int rem_bytes = A.length & 0xF;
+//        if (rem_bytes > 0) {
+//            byte[] offset_star = new byte[16];
+//            for (int j = 0; j < 16; j++) {
+//                offset_star[j] = (byte) (offset[j] ^ L[0][j]);
+//            }
+//
+//            for (int i = 0; i < rem_bytes; i++) {
+//                c_in[i] = (byte) (A[(m << 4) + i] ^ offset_star[i]);
+//            }
+//            c_in[rem_bytes] = (byte) (0x80 ^ offset_star[rem_bytes]);
+//            System.arraycopy(offset_star, rem_bytes + 1, c_in, rem_bytes + 1, 16 - (rem_bytes + 1));
+//
+//            // c_out = ENCIPHER(K, c_in)
+//            cipher.processBlock(c_in, 0, c_out, 0);
+//
+//            // Sum = Sum_m XOR c_out
+//            for (int j = 0; j < 16; j++) {
+//                sum[j] ^= c_out[j];
+//            }
+//        }
     }
 
     public byte[] process(byte[] N, byte[] A, byte[] P) throws Exception {
@@ -161,15 +161,17 @@ public class OCB_AES {
 
         // Ktop = ENCIPHER(K, Nonce[1..122] || 0^6
         cipher.processBlock(nonce, 0, offset, 0);
+        byte[] Ktop = new byte[16];
+        arraycopy(offset, 0, Ktop, 0, 16);
 
         // stretch = Ktop || (Ktop[1..64] xor Ktop[9..72])
         long[] stretch = new long[3];
 
         // Ktop[1..64] xor Ktop[9..72]
         for (int i = 0; i < 8; i++) {
-            stretch[0] |= (long) offset[i]  << (56 - (i << 3));
-            stretch[1] |= (long) offset[i + 8]  << (56 - (i << 3));
-            stretch[2] |= (long) (offset[i] ^ offset[i + 1]) << (56 - (i << 3));
+            stretch[0] |= (((long) offset[i]) & 0xFF)  << (56 - (i << 3));
+            stretch[1] |= (((long) offset[i + 8]) & 0xFF)  << (56 - (i << 3));
+            stretch[2] |= (((long) (offset[i] ^ offset[i + 1])) & 0xFF) << (56 - (i << 3));
         }
         for (int i = 0; i < 2; i++) {
             stretch[i] = (stretch[i] << bottom) | (stretch[i + 1] >>> (64 - bottom));
@@ -181,6 +183,7 @@ public class OCB_AES {
         final byte[] c_in = new byte[16];
         for (int i = 0; i < plen - 15; i += 16) {
             int li = ntz((i >>> 4) + 1) + 2;
+
             for (int j = 0; j < 16; j++) {
                 offset[j] ^= L[li][j];
                 c_in[j] = (byte) (P[i + j] ^ offset[j]);
