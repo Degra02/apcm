@@ -3,6 +3,8 @@ import java.util.Arrays;
 import static java.lang.System.*;
 
 
+// Author: Filippo De Grandi
+// Group: OrCoBoia.odiojava
 
 public class OCB_AES {
     private final byte[][] L;
