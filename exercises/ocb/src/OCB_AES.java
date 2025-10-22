@@ -210,21 +210,8 @@ public class OCB_AES {
                 C[full_blocks + j] = (byte) (c_in[j] ^ P[full_blocks + j]);
                 checksum[j] ^= P[full_blocks + j];
             }
-
-            // Checksum_* = Checksum_m xor (P_* || 1 || zeros(127 - bitlength(P_*)))
-
-
-
-            for (int j = 0; j < rem_bytes; j++) {
-                checksum[j] ^= (byte) (offset[j] ^ L[1][j]);
-            }
-
-//            for (int j = 0; j < rem_bytes; j++) {
-//                checksum[j] ^= P[full_blocks + j];
-//            }
-//
-//            // TODO: 1 or 0x80?
-//            checksum[rem_bytes] ^= (byte) 0x80;
+            // Bug: this was 1, should be 0x80
+            checksum[rem_bytes] ^= (byte) 0x80;
         }
 
         // TAG computation
@@ -235,17 +222,13 @@ public class OCB_AES {
         // Tag = ENCIPHER(K, Checksum_* xor Offset_* xor L_$) xor HASH(K,A)
         byte[] tag = new byte[16];
         cipher.processBlock(checksum, 0, tag, 0);
+
         for (int j = 0; j < 16; j++) {
             tag[j] ^= sum[j]; // sum = HASH(K,A)
         }
 
+        // Append tag to ciphertext
         System.arraycopy(tag, 0, C, plen, 16);
-
-//        cipher.processBlock(checksum, 0, C, plen);
-//
-//        for (int i = plen; i < plen + 16; i++) {
-//            C[i] ^= sum[i - plen];
-//        }
 
         return C;
     }
