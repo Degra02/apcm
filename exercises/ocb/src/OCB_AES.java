@@ -1,7 +1,8 @@
 import java.io.IOException;
 import java.util.Arrays;
-
 import static java.lang.System.*;
+
+
 
 public class OCB_AES {
     private final byte[][] L;
@@ -127,6 +128,7 @@ public class OCB_AES {
         }
 
         // BUG: if plaintext is <= 16 bytes and decrypting, access to negative index
+        // fixed with more comprehensive handling of decrypt mode
         int plen;
         byte[] inBuf;
         byte[] outBuf;
@@ -245,20 +247,20 @@ public class OCB_AES {
 
         // BUG: missing tag verification
         if (decrypt) {
+            assert receivedTag != null;
             if (!check_tag(receivedTag, computed_tag)) {
                 throw new SecurityException("Tag mismatch!");
             }
             return outBuf;
         } else {
             // BUG: implementation was missing tag appending
-            // Append tag to ciphertext
             System.arraycopy(computed_tag, 0, C, plen, 16);
-
             return C;
         }
     }
 
-    // BUG: timing attack
+    // BUG: timing attack vulnerability
+    // fixed with constant-time comparison
     public boolean check_tag(byte[] o_tag, byte[] r_tag) {
         boolean res = o_tag.length == r_tag.length;
 
