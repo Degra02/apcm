@@ -4,7 +4,7 @@ import static java.lang.System.*;
 
 
 // Author: Filippo De Grandi
-// Group: OrCoBoia.odiojava
+// Group: OrCaBoia.odiojava
 
 public class OCB_AES {
     private final byte[][] L;
@@ -20,6 +20,7 @@ public class OCB_AES {
         this.decrypt = decrypt;
     }
 
+    // TODO: nonce reuse should be checked for consecutive calls with same key
     public OCB_AES(boolean decrypt, byte[] key) throws IOException {
         checksum = new byte[16];
         offset = new byte[16];
@@ -45,7 +46,7 @@ public class OCB_AES {
         }
     }
 
-    // Doubling operation in GF(2^128)
+    // doubling operation in GF(2^128)
     private byte[] dbl(byte[] S) {
         byte[] res = new byte[16];
         // BUG: fixed missing parentheses
@@ -95,7 +96,7 @@ public class OCB_AES {
             }
         }
 
-        // Processing of remaining block
+        // processing of remaining block
         // A_* is used to denote the last partial block (in RFC)
         int rem_bytes = A.length & 0xF;
         if (rem_bytes > 0){
@@ -151,7 +152,7 @@ public class OCB_AES {
         byte[] C = new byte[plen + 16];
         byte[] nonce = new byte[16];
 
-        // Fine since this code only supports 128 bit nonces
+        // fine since this code only supports 128 bit nonces
         nonce[15 - N.length] = 1;
         arraycopy(N, 0, nonce, 16 - N.length, N.length);
 
@@ -196,7 +197,7 @@ public class OCB_AES {
                 c_in[j] = (byte) (P[i + j] ^ offset[j]);
             }
 
-            // This is either encryption or decryption
+            // this is either encryption or decryption
             bid_cipher.processBlock(c_in, 0, tmp_out, 0);
 
             if (!decrypt) {
@@ -257,10 +258,16 @@ public class OCB_AES {
         // BUG: missing tag verification
         // fixed below
         if (decrypt) {
-            assert receivedTag != null;
-            if (!check_tag(receivedTag, computed_tag)) {
+            if (receivedTag == null || !check_tag(receivedTag, computed_tag)) {
+                Arrays.fill(outBuf, (byte)0);
+                Arrays.fill(checksum, (byte)0);
+                Arrays.fill(offset, (byte)0);
+                Arrays.fill(sum, (byte)0);
+                Arrays.fill(computed_tag, (byte)0);
                 throw new SecurityException("Tag mismatch!");
             }
+            Arrays.fill(checksum, (byte)0);
+            Arrays.fill(sum, (byte)0);
             return outBuf;
         } else {
             // BUG: implementation was missing tag appending
