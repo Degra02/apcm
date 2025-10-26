@@ -49,7 +49,7 @@ public class OCB_AES {
     // doubling operation in GF(2^128)
     private byte[] dbl(byte[] S) {
         byte[] res = new byte[16];
-        // BUG: fixed missing parentheses
+        // BUG?: fixed missing parentheses
         if (((S[0] >>> 7) & 1) == 1) {
             res[15] = (byte) 0x87;
         }
@@ -81,7 +81,7 @@ public class OCB_AES {
             // Offset_i = Offset_{i-1} XOR L_{ntz(i)}
             for (int j = 0; j < 16; j++) {
                 // BUG: ntz(0) is faulty
-                // BUG: Moreover, it should be L[ntz(i + 1) + 2]
+                // BUG: Moreover, it should be L[ntz(i + 1) + 2] to match the spec
                 offset[j] ^= L[ntz(i + 1) + 2][j];
 
                 // A_i xor Offset_i
@@ -106,7 +106,7 @@ public class OCB_AES {
             }
 
             // CipherInput = (A_* || 1 || zeros(127 - bitlength(A_*))) XOR Offset_*
-            // BUG: 1 is wrong, should be 0x80
+            // BUG: 1 is wrong, should be 0x80, i.e. a single 1 bit
             c_in[rem_bytes] = (byte) (0x80 ^ offset[rem_bytes] ^ L[0][rem_bytes]);
             for (int i = rem_bytes + 1; i < 16; i++) {
                 c_in[i] = (byte) (offset[i] ^ L[0][i]);
@@ -152,7 +152,10 @@ public class OCB_AES {
         byte[] C = new byte[plen + 16];
         byte[] nonce = new byte[16];
 
-        // fine since this code only supports 128 bit nonces
+        // BUG: check nonce length missing
+        if (N.length < 1 || N.length > 15) {
+            throw new IllegalArgumentException("Invalid nonce length");
+        }
         nonce[15 - N.length] = 1;
         arraycopy(N, 0, nonce, 16 - N.length, N.length);
 
