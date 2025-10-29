@@ -1,4 +1,5 @@
 use std::fmt::{Display, LowerHex};
+use clap::ValueEnum;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -28,22 +29,37 @@ impl LowerHex for Digest {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum ShaVariant {
-    SHA3_224,
-    SHA3_256,
-    SHA3_384,
-    SHA3_512,
+    #[value(name = "v224")]
+    V224,
+    #[value(name = "v256")]
+    V256,
+    #[value(name = "v384")]
+    V384,
+    #[value(name = "v512")]
+    V512,
+}
+
+impl Display for ShaVariant {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ShaVariant::V224 => write!(f, "v224"),
+            ShaVariant::V256 => write!(f, "v256"),
+            ShaVariant::V384 => write!(f, "v384"),
+            ShaVariant::V512 => write!(f, "v512"),
+        }
+    }
 }
 
 impl ShaVariant {
     /// Returns rate r, capacity c and output length for the given SHA-3 variant.
     pub fn parameters(&self) -> (usize, usize, usize) {
         match self {
-            ShaVariant::SHA3_224 => (1152, 448, 224),
-            ShaVariant::SHA3_256 => (1088, 512, 256),
-            ShaVariant::SHA3_384 => (832, 768, 384),
-            ShaVariant::SHA3_512 => (576, 1024, 512),
+            ShaVariant::V224 => (1152, 448, 224),
+            ShaVariant::V256 => (1088, 512, 256),
+            ShaVariant::V384 => (832, 768, 384),
+            ShaVariant::V512 => (576, 1024, 512),
         }
     }
 }
@@ -221,9 +237,9 @@ impl Keccak {
             self.chi();
             self.iota(round);
 
-            if round == 23 {
-                self.print_last_slice();
-            }
+            // if round == 23 {
+            //     self.print_last_slice();
+            // }
         }
     }
 

@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<script>
+    class CodeTwo extends HTMLElement {
+    constructor() {
+        super();
+    }
+}
+customElements.define('custom_font_code-2', CodeTwo);
+</script>
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>TLSAv2</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Condensed&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700&amp;display=swap">
+    <link rel="stylesheet" href="assets/css/styles.min.css">
+    <style>
+        custom_font_code-2 {
+          text-underline: #000000;
+          display: inline; /* or block if you want it to behave like a block element */
+        }
+    </style>
+</head>
+
+
+<body>
+    <header class="header-blue" style="color: var(--bs-blue);background: #0068b4;">
+        <nav class="navbar navbar-dark navbar-expand-md navigavtion-clean-search">
+            <div class="container-fluid">
+                <div class="card" style="background: rgba(255,255,255,0);border-style: none;"><a class="navbar-brand"
+                        href="#" style="font-family: roboto;text-align: left;"><img class="img-fluid"
+                            src="assets/img/FBK_Cybersecurity_white.png" style="width: 150px;">&nbsp;
+                        &nbsp;TLSAssistant</a></div><label class="form-label"
+                    style="color: #a5a5a5;font-family: Roboto, sans-serif;">Version 3.1.0</label>
+            </div>
+        </nav>
+        <div class="container" style="background: #ffffff;border-radius: 10px;max-width: 90%;">
+            
+            <div class="card" style="padding: 8px;margin-top: 8;">
+                <h2
+                    style="color: #0068b4;font-family: Roboto, sans-serif;margin-top: 0px;padding-top: 8px;padding-right: 8px;padding-bottom: 0px;padding-left: 7px;">
+                    Recap</h2>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">  Hostname   /<br> Modules</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">3SHAKE</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">alpaca</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">BEAST</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">BREACH</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">CSS Injection</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">Missing Certificate Transparency</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">CRIME</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">DROWN</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">Freak</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">Heartbleed</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">HSTS not preloaded</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">HSTS not set</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">HTTPS not enforced</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">Logjam</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">Lucky 13</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">Bar Mitzvah</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">RC4 NOMORE</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">padding_oracle</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">PFS</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">Renegotiation attack</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">ROBOT</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">sslpoodle</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">Sweet32</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">Ticketbleed</th>
+                                
+                                    <th style="font-family: Roboto, sans-serif;border-bottom-color: #8db53d;">tlspoodle</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                                <tr>
+                                    <td
+                                        style="font-family: Roboto, sans-serif;background: rgba(255,175,175,0);font-style: italic;">
+                                        localhost:4444</td>
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-weight: bold;background: rgba(255,175,175,0.59);">
+                                                
+                                                    Potentially Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-weight: bold;background: rgba(255,175,175,0.59);">
+                                                
+                                                    Potentially Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-weight: bold;background: rgba(255,175,175,0.59);">
+                                                
+                                                    Potentially Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-weight: bold;background: rgba(255,175,175,0.59);">
+                                                
+                                                    Potentially Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-weight: bold;background: rgba(255,175,175,0.59);">
+                                                
+                                                    Potentially Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-weight: bold;background: rgba(255,175,175,0.59);">
+                                                
+                                                    Potentially Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-weight: bold;background: rgba(255,175,175,0.59);">
+                                                
+                                                    Potentially Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-weight: bold;background: rgba(255,175,175,0.59);">
+                                                
+                                                    Potentially Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-weight: bold;background: rgba(255,175,175,0.59);">
+                                                
+                                                    Potentially Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-weight: bold;background: rgba(255,175,175,0.59);">
+                                                
+                                                    Potentially Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-weight: bold;background: rgba(255,175,175,0.59);">
+                                                
+                                                    Potentially Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+                                        
+                                            <td
+                                                style="font-family: Roboto, sans-serif;font-style: italic;color: rgb(33, 37, 41);background: rgba(235,235,235,0.59);">
+                                                
+                                                    Not Vulnerable
+                                                
+                                            </td>
+                                        
+                                    
+
+
+                                </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <h2
+                style="color: #0068b4;font-family: Roboto, sans-serif;padding-top: 8px;padding-bottom: 0px;padding-left: 7px;padding-right: 8px;">
+                Detailed Results</h2>
+            <h6
+                style="color: #6c757d;font-family: Roboto, sans-serif;padding: 0px;padding-left: 9px;padding-top: 0px;padding-bottom: 4px;">
+                2025-10-29 15:26:05</h6>
+            <h6
+                style="color: #6c757d;font-family: Roboto, sans-serif;padding: 0px;padding-left: 9px;padding-top: 0px;padding-bottom: 4px;">
+                Modules:  three_shake  alpaca  beast  breach  ccs_injection  certificate_transparency  crime  drown  freak  heartbleed  hsts_preloading  hsts_set  https_enforced  logjam  lucky13  mitzvah  nomore  padding_oracle  pfs  renegotiation  robot  sslpoodle  sweet32  ticketbleed  tlspoodle  </h6>
+            
+            
+            <div class="card" style="background: rgba(235,235,235,0.59);">
+                <h5 class="text-center" style="font-family: 'Roboto Condensed', sans-serif;color: #a5a5a5;background: rgba(235,235,235,0);">
+                    localhost:4444
+                </h5>
+                
+                
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">3SHAKE</h3>
+
+                        <h6 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">
+                            
+                            
+                                CVE:&nbsp;Library dependent 
+                                
+                            
+                                
+                                
+                            
+                                CVSS3:&nbsp;Library dependent 
+                                
+                            
+                            </h6>
+                        
+                            <h6 class="text-muted card-subtitle mb-2"
+                                style="font-family: Roboto, sans-serif;color: #a5a5a5;">Triple Handshake Attack
+                            </h6>
+                        
+                        <p class="card-text"
+                            style="font-family: 'Roboto Condensed', sans-serif;color: #6c757d;font-style: italic;">
+                            Due to the incorrect handling of the session identifier, an attacker is able to force two sessions to have the same <code>Master Secret</code> and ID. The attacker performs 3SHAKE by providing a server to which the victim deliberately connects. Once connected, the malicious server exploits the renegotiation mechanism to manipulate the session.<br/>The attack leads to a client impersonation that, by breaking both confidentiality and authentication, has a serious impact on the transmission.
+                        </p>
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            <h5 style="color: #000000;font-family: Roboto, sans-serif;">Mitigation</h5>
+                            <ul class="list-group list-group-flush" style="border-style: solid;border-color: #8db53d;">
+
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Textual</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">The only acceptable mitigation is to use the <code>extended_master_secret</code> TLS extension. For this reason it is recommended to update the TLS library to a version that supports the aforementioned extension (e.g. OpenSSL v1.1.0+).</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Apache</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">No snippet available</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>nginx</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">No snippet available</p>
+                                    </p>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                        
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            
+                            <div class="accordion" role="tablist" id="accordion-1"
+                                style="border-width: 3px;border-radius: 0px,0px,3px,3px;">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" role="tab"><button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse" data-bs-target="#accordion-1 .item-1"
+                                            aria-expanded="false" aria-controls="accordion-1 .item-1"
+                                            style="border-style: solid;border-color: #8db53d;font-weight: bold;font-family: Roboto, sans-serif;color: #000000;">RAW
+                                            Output</button></h2>
+                                    <div class="accordion-collapse collapse item-1" role="tabpanel"
+                                        data-bs-parent="#accordion-1"
+                                        style="border-style: solid;border-color: #0068b4;border-top-style: none;border-bottom-style: none;height: 200px;">
+                                        <div class="accordion-body"><textarea onclick="this.focus();this.select()"
+                                                style="max-width: 100%;min-width: 100%;width: 100%;height: 150px;min-height: 0px;max-height: none;border-radius: 3px;font-family: 'Roboto Mono', monospace;background: #f5faff;color: #0068b4;border-width: 3px;border-color: #0068b4;border-top-style: none;border-right-color: #acd5fe;border-bottom-style: none;border-left-color: #acd5fe;padding: 12px;margin: 0px;font-size: 13px;margin-top: 10px;"
+                                                readonly="" name="raw_code">{ 'finding': "'EC point formats/#11' 'heartbeat/#15' 'session ticket/#35' "
+             "'next protocol/#13172' 'renegotiation info/#65281'",
+  'ip': ['127.0.0.1'],
+  'key': ['TLS_extensions'],
+  'port': '4444',
+  'severity': 'INFO'}</textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">ALPACA</h3>
+
+                        <h6 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">
+                            
+                            
+                                CVE:&nbsp;2021-3618 
+                                
+                            
+                                
+                                
+                            
+                                CVSS3:&nbsp;7.4 (High) 
+                                
+                            
+                            </h6>
+                        
+                            <h6 class="text-muted card-subtitle mb-2"
+                                style="font-family: Roboto, sans-serif;color: #a5a5a5;"><strong>A</strong>pplication <strong>L</strong>ayer <strong>P</strong>rotocol Confusion-<strong>A</strong>nalyzing and Mitigating <strong>C</strong>racks in TLS <strong>A</strong>uthentication
+                            </h6>
+                        
+                        <p class="card-text"
+                            style="font-family: 'Roboto Condensed', sans-serif;color: #6c757d;font-style: italic;">
+                            ALPACA is an application layer protocol content confusion attack, exploiting TLS servers implementing different protocols but using compatible certificates, such as multi-domain or wildcard certificates. Attackers can redirect traffic from one subdomain to another, resulting in a valid TLS session. This breaks the authentication of TLS and cross-protocol attacks may be possible where the behavior of one protocol service may compromise the other at the application layer.
+                        </p>
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            <h5 style="color: #000000;font-family: Roboto, sans-serif;">Mitigation</h5>
+                            <ul class="list-group list-group-flush" style="border-style: solid;border-color: #8db53d;">
+
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Textual</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">Enable the TLS Extensions SNI and ALPN.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Apache</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">Currenlty there is no snippet available to enable Strict ALPN. <br/><br/>
+                To enable Strict SNI in Apache: <br/> 
+                1. The first step is to create a dummy certificate for localhost with a 100-year lifespan:<br/>
+                <code>
+                sudo openssl genrsa -out /etc/ssl/private/localhost.key 2048<br/>
+                sudo openssl req -new -key /etc/ssl/private/localhost.key -subj /CN=localhost -out /etc/ssl/certs/localhost.csr<br/>
+                echo subjectAltName=DNS:localhost | sudo openssl x509  -in /etc/ssl/certs/localhost.csr -out /etc/ssl/certs/localhost.crt -req -signkey /etc/ssl/private/localhost.key -days 36525 -extfile - <br/>
+                </code><br/>
+                2. Create the virtual host configuration which uses that certificate so that TLS connections without a server name will now be directed to your dummy virtual host and fail:<br/> 
+                <code>
+                &lt;VirtualHost *:443&gt;<br/>
+                ServerName localhost<br/>
+                SSLEngine On<br/>
+                SSLStrictSNIVHostCheck On<br/>
+                SSLCertificateKeyFile /etc/ssl/private/localhost.key<br/>
+                SSLCertificateFile /etc/ssl/certs/localhost.crt<br/>
+                &lt;Location /&gt;<br/>
+                    Require all denied<br/>
+                &lt;/Location&gt;<br/>
+                &lt;/VirtualHost&gt;<br/>
+                </code><br/>
+                This must be placed in a location where it will be read before any other virtual host configuration, for example before all other virtual host configurations in: <i>/etc/apache2/sites-available/example.com.conf</i>. 
+                </p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>nginx</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">To enable Strict ALPN in nginx upgrade to version >=1.21.4. <br/><br/>
+                To enable Strict SNI in nginx: <br/> 
+                1. If you are using nginx>=1.19.4 edit you configuration file usually located in <i>/etc/nginx/sites-enabled/default</i><br/> (if you changed your site conf name <i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>); to look like this:<br/>
+                <code>server {<br/>
+                    listen               443 ssl default_server;<br/>
+                    ssl_reject_handshake on;<br/>
+                }<br/>
+                <br/>
+                server {<br/>
+                    listen 443 ssl http2;<br/>
+                    listen [::]:443 ssl http2;<br/>
+                    server_name example.com;<br/>
+                    [...]<br/>
+                }<br/>
+                </code><br/>
+                2. If you are using nginx&lt;1.19.4 follow <a href="https://blog.sion.moe/methods-to-prevent-leaking-websites-origin-server-ip-behind-cdn/">this guide</a><br/>
+                </p>
+                                    </p>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                        
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            
+                            <div class="accordion" role="tablist" id="accordion-2"
+                                style="border-width: 3px;border-radius: 0px,0px,3px,3px;">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" role="tab"><button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse" data-bs-target="#accordion-2 .item-1"
+                                            aria-expanded="false" aria-controls="accordion-2 .item-1"
+                                            style="border-style: solid;border-color: #8db53d;font-weight: bold;font-family: Roboto, sans-serif;color: #000000;">RAW
+                                            Output</button></h2>
+                                    <div class="accordion-collapse collapse item-1" role="tabpanel"
+                                        data-bs-parent="#accordion-2"
+                                        style="border-style: solid;border-color: #0068b4;border-top-style: none;border-bottom-style: none;height: 200px;">
+                                        <div class="accordion-body"><textarea onclick="this.focus();this.select()"
+                                                style="max-width: 100%;min-width: 100%;width: 100%;height: 150px;min-height: 0px;max-height: none;border-radius: 3px;font-family: 'Roboto Mono', monospace;background: #f5faff;color: #0068b4;border-width: 3px;border-color: #0068b4;border-top-style: none;border-right-color: #acd5fe;border-bottom-style: none;border-left-color: #acd5fe;padding: 12px;margin: 0px;font-size: 13px;margin-top: 10px;"
+                                                readonly="" name="raw_code">{ 'localhost:4444': { 'ALPACA': { 'Details': { 'ALPACA Mitigation': 'not '
+                                                                    'mitigated',
+                                               'Strict ALPN': 'false',
+                                               'Strict SNI': 'false'},
+                                  'Result': 'not mitigated',
+                                  'mitigation': { '#comment': ' '
+                                                              'https://alpaca-attack.com/ ',
+                                                  '#comment1': ' '
+                                                               'https://nvd.nist.gov/vuln/detail/CVE-2021-3618 ',
+                                                  '#comment2': 'https://blog.sion.moe/methods-to-prevent-leaking-websites-origin-server-ip-behind-cdn/',
+                                                  '#comment3': 'https://blog.des.no/2020/11/configuring-strict-sni-with-apache-httpd-2-4/',
+                                                  '#omit-xml-declaration': 'yes',
+                                                  'Entry': { '#comment': 'AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N',
+                                                             'CVE': '2021-3618',
+                                                             'CVSS3': '7.4 '
+                                                                      '(High)',
+                                                             'Description': 'ALPACA '
+                                                                            'is '
+                                                                            'an '
+                                                                            'application '
+                                                                            'layer '
+                                                                            'protocol '
+                                                                            'content '
+                                                                            'confusion '
+                                                                            'attack, '
+                                                                            'exploiting '
+                                                                            'TLS '
+                                                                            'servers '
+                                                                            'implementing '
+                                                                            'different '
+                                                                            'protocols '
+                                                                            'but '
+                                                                            'using '
+                                                                            'compatible '
+                                                                            'certificates, '
+                                                                            'such '
+                                                                            'as '
+                                                                            'multi-domain '
+                                                                            'or '
+                                                                            'wildcard '
+                                                                            'certificates. '
+                                                                            'Attackers '
+                                                                            'can '
+                                                                            'redirect '
+                                                                            'traffic '
+                                                                            'from '
+                                                                            'one '
+                                                                            'subdomain '
+                                                                            'to '
+                                                                            'another, '
+                                                                            'resulting '
+                                                                            'in '
+                                                                            'a '
+                                                                            'valid '
+                                                                            'TLS '
+                                                                            'session. '
+                                                                            'This '
+                                                                            'breaks '
+                                                                            'the '
+                                                                            'authentication '
+                                                                            'of '
+                                                                            'TLS '
+                                                                            'and '
+                                                                            'cross-protocol '
+                                                                            'attacks '
+                                                                            'may '
+                                                                            'be '
+                                                                            'possible '
+                                                                            'where '
+                                                                            'the '
+                                                                            'behavior '
+                                                                            'of '
+                                                                            'one '
+                                                                            'protocol '
+                                                                            'service '
+                                                                            'may '
+                                                                            'compromise '
+                                                                            'the '
+                                                                            'other '
+                                                                            'at '
+                                                                            'the '
+                                                                            'application '
+                                                                            'layer.',
+                                                             'ExtendedName': '<strong>A</strong>pplication '
+                                                                             '<strong>L</strong>ayer '
+                                                                             '<strong>P</strong>rotocol '
+                                                                             'Confusion-<strong>A</strong>nalyzing '
+                                                                             'and '
+                                                                             'Mitigating '
+                                                                             '<strong>C</strong>racks '
+                                                                             'in '
+                                                                             'TLS '
+                                                                             '<strong>A</strong>uthentication',
+                                                             'Mitigation': { 'Apache': 'Currenlty '
+                                                                                       'there '
+                                                                                       'is '
+                                                                                       'no '
+                                                                                       'snippet '
+                                                                                       'available '
+                                                                                       'to '
+                                                                                       'enable '
+                                                                                       'Strict '
+                                                                                       'ALPN. '
+                                                                                       '<br/><br/>\n'
+                                                                                       '                '
+                                                                                       'To '
+                                                                                       'enable '
+                                                                                       'Strict '
+                                                                                       'SNI '
+                                                                                       'in '
+                                                                                       'Apache: '
+                                                                                       '<br/> \n'
+                                                                                       '                '
+                                                                                       '1. '
+                                                                                       'The '
+                                                                                       'first '
+                                                                                       'step '
+                                                                                       'is '
+                                                                                       'to '
+                                                                                       'create '
+                                                                                       'a '
+                                                                                       'dummy '
+                                                                                       'certificate '
+                                                                                       'for '
+                                                                                       'localhost '
+                                                                                       'with '
+                                                                                       'a '
+                                                                                       '100-year '
+                                                                                       'lifespan:<br/>\n'
+                                                                                       '                '
+                                                                                       '<code>\n'
+                                                                                       '                '
+                                                                                       'sudo '
+                                                                                       'openssl '
+                                                                                       'genrsa '
+                                                                                       '-out '
+                                                                                       '/etc/ssl/private/localhost.key '
+                                                                                       '2048<br/>\n'
+                                                                                       '                '
+                                                                                       'sudo '
+                                                                                       'openssl '
+                                                                                       'req '
+                                                                                       '-new '
+                                                                                       '-key '
+                                                                                       '/etc/ssl/private/localhost.key '
+                                                                                       '-subj '
+                                                                                       '/CN=localhost '
+                                                                                       '-out '
+                                                                                       '/etc/ssl/certs/localhost.csr<br/>\n'
+                                                                                       '                '
+                                                                                       'echo '
+                                                                                       'subjectAltName=DNS:localhost '
+                                                                                       '| '
+                                                                                       'sudo '
+                                                                                       'openssl '
+                                                                                       'x509  '
+                                                                                       '-in '
+                                                                                       '/etc/ssl/certs/localhost.csr '
+                                                                                       '-out '
+                                                                                       '/etc/ssl/certs/localhost.crt '
+                                                                                       '-req '
+                                                                                       '-signkey '
+                                                                                       '/etc/ssl/private/localhost.key '
+                                                                                       '-days '
+                                                                                       '36525 '
+                                                                                       '-extfile '
+                                                                                       '- '
+                                                                                       '<br/>\n'
+                                                                                       '                '
+                                                                                       '</code><br/>\n'
+                                                                                       '                '
+                                                                                       '2. '
+                                                                                       'Create '
+                                                                                       'the '
+                                                                                       'virtual '
+                                                                                       'host '
+                                                                                       'configuration '
+                                                                                       'which '
+                                                                                       'uses '
+                                                                                       'that '
+                                                                                       'certificate '
+                                                                                       'so '
+                                                                                       'that '
+                                                                                       'TLS '
+                                                                                       'connections '
+                                                                                       'without '
+                                                                                       'a '
+                                                                                       'server '
+                                                                                       'name '
+                                                                                       'will '
+                                                                                       'now '
+                                                                                       'be '
+                                                                                       'directed '
+                                                                                       'to '
+                                                                                       'your '
+                                                                                       'dummy '
+                                                                                       'virtual '
+                                                                                       'host '
+                                                                                       'and '
+                                                                                       'fail:<br/> \n'
+                                                                                       '                '
+                                                                                       '<code>\n'
+                                                                                       '                '
+                                                                                       '&lt;VirtualHost '
+                                                                                       '*:443&gt;<br/>\n'
+                                                                                       '                '
+                                                                                       'ServerName '
+                                                                                       'localhost<br/>\n'
+                                                                                       '                '
+                                                                                       'SSLEngine '
+                                                                                       'On<br/>\n'
+                                                                                       '                '
+                                                                                       'SSLStrictSNIVHostCheck '
+                                                                                       'On<br/>\n'
+                                                                                       '                '
+                                                                                       'SSLCertificateKeyFile '
+                                                                                       '/etc/ssl/private/localhost.key<br/>\n'
+                                                                                       '                '
+                                                                                       'SSLCertificateFile '
+                                                                                       '/etc/ssl/certs/localhost.crt<br/>\n'
+                                                                                       '                '
+                                                                                       '&lt;Location '
+                                                                                       '/&gt;<br/>\n'
+                                                                                       '                    '
+                                                                                       'Require '
+                                                                                       'all '
+                                                                                       'denied<br/>\n'
+                                                                                       '                '
+                                                                                       '&lt;/Location&gt;<br/>\n'
+                                                                                       '                '
+                                                                                       '&lt;/VirtualHost&gt;<br/>\n'
+                                                                                       '                '
+                                                                                       '</code><br/>\n'
+                                                                                       '                '
+                                                                                       'This '
+                                                                                       'must '
+                                                                                       'be '
+                                                                                       'placed '
+                                                                                       'in '
+                                                                                       'a '
+                                                                                       'location '
+                                                                                       'where '
+                                                                                       'it '
+                                                                                       'will '
+                                                                                       'be '
+                                                                                       'read '
+                                                                                       'before '
+                                                                                       'any '
+                                                                                       'other '
+                                                                                       'virtual '
+                                                                                       'host '
+                                                                                       'configuration, '
+                                                                                       'for '
+                                                                                       'example '
+                                                                                       'before '
+                                                                                       'all '
+                                                                                       'other '
+                                                                                       'virtual '
+                                                                                       'host '
+                                                                                       'configurations '
+                                                                                       'in: '
+                                                                                       '<i>/etc/apache2/sites-available/example.com.conf</i>. \n'
+                                                                                       '                ',
+                                                                             'Textual': 'Enable '
+                                                                                        'the '
+                                                                                        'TLS '
+                                                                                        'Extensions '
+                                                                                        'SNI '
+                                                                                        'and '
+                                                                                        'ALPN.',
+                                                                             'nginx': 'To '
+                                                                                      'enable '
+                                                                                      'Strict '
+                                                                                      'ALPN '
+                                                                                      'in '
+                                                                                      'nginx '
+                                                                                      'upgrade '
+                                                                                      'to '
+                                                                                      'version '
+                                                                                      '>=1.21.4. '
+                                                                                      '<br/><br/>\n'
+                                                                                      '                '
+                                                                                      'To '
+                                                                                      'enable '
+                                                                                      'Strict '
+                                                                                      'SNI '
+                                                                                      'in '
+                                                                                      'nginx: '
+                                                                                      '<br/> \n'
+                                                                                      '                '
+                                                                                      '1. '
+                                                                                      'If '
+                                                                                      'you '
+                                                                                      'are '
+                                                                                      'using '
+                                                                                      'nginx>=1.19.4 '
+                                                                                      'edit '
+                                                                                      'you '
+                                                                                      'configuration '
+                                                                                      'file '
+                                                                                      'usually '
+                                                                                      'located '
+                                                                                      'in '
+                                                                                      '<i>/etc/nginx/sites-enabled/default</i><br/> '
+                                                                                      '(if '
+                                                                                      'you '
+                                                                                      'changed '
+                                                                                      'your '
+                                                                                      'site '
+                                                                                      'conf '
+                                                                                      'name '
+                                                                                      '<i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>); '
+                                                                                      'to '
+                                                                                      'look '
+                                                                                      'like '
+                                                                                      'this:<br/>\n'
+                                                                                      '                '
+                                                                                      '<code>server '
+                                                                                      '{<br/>\n'
+                                                                                      '                    '
+                                                                                      'listen               '
+                                                                                      '443 '
+                                                                                      'ssl '
+                                                                                      'default_server;<br/>\n'
+                                                                                      '                    '
+                                                                                      'ssl_reject_handshake '
+                                                                                      'on;<br/>\n'
+                                                                                      '                '
+                                                                                      '}<br/>\n'
+                                                                                      '                '
+                                                                                      '<br/>\n'
+                                                                                      '                '
+                                                                                      'server '
+                                                                                      '{<br/>\n'
+                                                                                      '                    '
+                                                                                      'listen '
+                                                                                      '443 '
+                                                                                      'ssl '
+                                                                                      'http2;<br/>\n'
+                                                                                      '                    '
+                                                                                      'listen '
+                                                                                      '[::]:443 '
+                                                                                      'ssl '
+                                                                                      'http2;<br/>\n'
+                                                                                      '                    '
+                                                                                      'server_name '
+                                                                                      'example.com;<br/>\n'
+                                                                                      '                    '
+                                                                                      '[...]<br/>\n'
+                                                                                      '                '
+                                                                                      '}<br/>\n'
+                                                                                      '                '
+                                                                                      '</code><br/>\n'
+                                                                                      '                '
+                                                                                      '2. '
+                                                                                      'If '
+                                                                                      'you '
+                                                                                      'are '
+                                                                                      'using '
+                                                                                      'nginx&lt;1.19.4 '
+                                                                                      'follow '
+                                                                                      '<a '
+                                                                                      'href="https://blog.sion.moe/methods-to-prevent-leaking-websites-origin-server-ip-behind-cdn/">this '
+                                                                                      'guide</a><br/>\n'
+                                                                                      '                '},
+                                                             'Name': 'ALPACA'}}}}}</textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">BEAST</h3>
+
+                        <h6 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">
+                            
+                            
+                                CVE:&nbsp;2011-3389 
+                                
+                            
+                                CVSS2:&nbsp;4.3 (MEDIUM) 
+                                
+                            
+                                
+                                
+                            
+                            </h6>
+                        
+                            <h6 class="text-muted card-subtitle mb-2"
+                                style="font-family: Roboto, sans-serif;color: #a5a5a5;"><strong>B</strong>rowser <strong>E</strong>xploit and <strong>A</strong>gainst <strong>S</strong>SL <strong>T</strong>LS
+                            </h6>
+                        
+                        <p class="card-text"
+                            style="font-family: 'Roboto Condensed', sans-serif;color: #6c757d;font-style: italic;">
+                            The SSL protocol, as used in certain configurations in Microsoft Windows and Microsoft Internet Explorer, Mozilla Firefox, Google Chrome, Opera, and other products, encrypts data by using CBC mode with chained initialization vectors, which allows man-in-the-middle attackers to obtain plaintext HTTP headers via a blockwise chosen-boundary attack (BCBA) on an HTTPS session, in conjunction with JavaScript code that uses (1) the HTML5 WebSocket API, (2) the Java URLConnection API, or (3) the Silverlight WebClient API, aka a "BEAST" attack.
+                        </p>
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            <h5 style="color: #000000;font-family: Roboto, sans-serif;">Mitigation</h5>
+                            <ul class="list-group list-group-flush" style="border-style: solid;border-color: #8db53d;">
+
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Textual</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">Disable TLSv1.0 protocol support.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Apache</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. open your Apache configuration file (default: <i>/etc/apache2/sites-available/default-ssl.conf</i>);<br/>2. search for the line starting with: <strong>SSLProtocol</strong><br/>   - if it contains the substring <code>+TLSv1.0</code>, remove it;<br/>   - otherwise, add <code>-TLSv1.0</code> at the end of the line.<br/><br/>N.B. restart the server by typing: <code>sudo service apache2 restart</code>.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>nginx</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. In a default situation, you can edit your website configuration <i>/etc/nginx/sites-enabled/default</i><br/> (if you changed your site conf name <i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>);<br/>2. Inside <code>server {...}</code> brackets configuration, find <code>ssl_protocols</code>;<br/>3. Remove <code>TLSv1.0</code> (if any). Make sure you have atleast another TLS protocol. If you can't find <code>ssl_protocols</code> you should be fine if your nginx is updated.<br/><br/><br/>N.B. restart the server by typing: <code>sudo service nginx restart</code>.<br/></p>
+                                    </p>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                        
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            
+                            <div class="accordion" role="tablist" id="accordion-3"
+                                style="border-width: 3px;border-radius: 0px,0px,3px,3px;">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" role="tab"><button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse" data-bs-target="#accordion-3 .item-1"
+                                            aria-expanded="false" aria-controls="accordion-3 .item-1"
+                                            style="border-style: solid;border-color: #8db53d;font-weight: bold;font-family: Roboto, sans-serif;color: #000000;">RAW
+                                            Output</button></h2>
+                                    <div class="accordion-collapse collapse item-1" role="tabpanel"
+                                        data-bs-parent="#accordion-3"
+                                        style="border-style: solid;border-color: #0068b4;border-top-style: none;border-bottom-style: none;height: 200px;">
+                                        <div class="accordion-body"><textarea onclick="this.focus();this.select()"
+                                                style="max-width: 100%;min-width: 100%;width: 100%;height: 150px;min-height: 0px;max-height: none;border-radius: 3px;font-family: 'Roboto Mono', monospace;background: #f5faff;color: #0068b4;border-width: 3px;border-color: #0068b4;border-top-style: none;border-right-color: #acd5fe;border-bottom-style: none;border-left-color: #acd5fe;padding: 12px;margin: 0px;font-size: 13px;margin-top: 10px;"
+                                                readonly="" name="raw_code">{ 'cve': 'CVE-2011-3389',
+  'cwe': 'CWE-20',
+  'finding': 'VULNERABLE -- but also supports higher protocols  TLSv1.2 '
+             '(likely mitigated)',
+  'ip': ['127.0.0.1'],
+  'key': ['BEAST'],
+  'port': '4444',
+  'severity': 'LOW'}</textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">BREACH</h3>
+
+                        <h6 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">
+                            
+                            
+                                CVE:&nbsp;2013-3587 
+                                
+                            
+                                
+                                
+                            
+                                CVSS3:&nbsp;5.9 (Medium) 
+                                
+                            
+                            </h6>
+                        
+                            <h6 class="text-muted card-subtitle mb-2"
+                                style="font-family: Roboto, sans-serif;color: #a5a5a5;"><strong>B</strong>rowser <strong>R</strong>econnaissance and <strong>E</strong>xfiltration via <strong>A</strong>daptive <strong>C</strong>ompression of <strong>H</strong>ypertext
+                            </h6>
+                        
+                        <p class="card-text"
+                            style="font-family: 'Roboto Condensed', sans-serif;color: #6c757d;font-style: italic;">
+                            By exploiting the information leakage provided by DEFLATE (compression algorithm), an attacker is able to retrieve the session cookie. In particular, the attacker guesses parts of the cookie, injects them in a valid client packet and analyzes the server's response. Thanks to the properties of a DEFLATE output, if the server's response is bigger than an untouched packet, then the guess is wrong.
+                        </p>
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            <h5 style="color: #000000;font-family: Roboto, sans-serif;">Mitigation</h5>
+                            <ul class="list-group list-group-flush" style="border-style: solid;border-color: #8db53d;">
+
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Textual</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">Disable the HTTP compression mechanism.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Apache</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">- If Apache has been installed via package manager:<br/> disable the DEFLATE module at OS level (e.g. on Ubuntu, run <code>sudo a2dismod deflate</code>);<br/><br/><br/>- if Apache has been manually installed:<br/> 1. open your Apache configuration file (default: <i>/usr/local/apache2/conf/httpd.conf</i>);<br/> 2. search for the line containing : <strong>mod_deflate.so</strong>;<br/> 3. comment or delete it.<br/><br/>N.B. restart the server by typing: <code>sudo service apache2 restart</code>.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>nginx</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">In a default situation, you can edit your website configuration <i>/etc/nginx/sites-enabled/default</i><br/> (if you changed your site conf name <i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>);<br/><br/>- Do the following:<br/> 1. Edit this file with an editor;<br/> 2. add in your server configuration the string <code>gzip off;</code>. <br/> If not missing, set it off by changing <code>gzip on;</code> to <code>gzip off;</code><br/><br/>- Example: <br/> <i>For example, assuming this is your configuration:</i><br/><br/><br/>  server{<br/>   gzip on;<br/>  }<br/><br/><br/> Change it in:<br/><br/><br/>  server{<br/>   gzip off;<br/>  }<br/><br/><br/> If missing, just add <code>gzip off;</code> inside brackets.<br/><br/>N.B. restart the server by typing: <code>sudo service nginx restart</code>.<br/><br/><strong>However this should be a fast temporary measure</strong>, use <a href='https://github.com/nulab/nginx-length-hiding-filter-module'>this</a> instead.<br/><br/><i>Disabling gzip will disable compression in your website.</i></p>
+                                    </p>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                        
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            
+                            <div class="accordion" role="tablist" id="accordion-4"
+                                style="border-width: 3px;border-radius: 0px,0px,3px,3px;">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" role="tab"><button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse" data-bs-target="#accordion-4 .item-1"
+                                            aria-expanded="false" aria-controls="accordion-4 .item-1"
+                                            style="border-style: solid;border-color: #8db53d;font-weight: bold;font-family: Roboto, sans-serif;color: #000000;">RAW
+                                            Output</button></h2>
+                                    <div class="accordion-collapse collapse item-1" role="tabpanel"
+                                        data-bs-parent="#accordion-4"
+                                        style="border-style: solid;border-color: #0068b4;border-top-style: none;border-bottom-style: none;height: 200px;">
+                                        <div class="accordion-body"><textarea onclick="this.focus();this.select()"
+                                                style="max-width: 100%;min-width: 100%;width: 100%;height: 150px;min-height: 0px;max-height: none;border-radius: 3px;font-family: 'Roboto Mono', monospace;background: #f5faff;color: #0068b4;border-width: 3px;border-color: #0068b4;border-top-style: none;border-right-color: #acd5fe;border-bottom-style: none;border-left-color: #acd5fe;padding: 12px;margin: 0px;font-size: 13px;margin-top: 10px;"
+                                                readonly="" name="raw_code">{ 'cve': 'CVE-2013-3587',
+  'cwe': 'CWE-310',
+  'finding': 'potentially VULNERABLE, gzip HTTP compression detected  - only '
+             "supplied '/' tested",
+  'ip': ['127.0.0.1'],
+  'key': ['BREACH'],
+  'port': '4444',
+  'severity': 'MEDIUM'}</textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">DROWN</h3>
+
+                        <h6 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">
+                            
+                            
+                                CVE:&nbsp;2016-0800 
+                                
+                            
+                                
+                                
+                            
+                                CVSS3:&nbsp;5.9 (Medium) 
+                                
+                            
+                            </h6>
+                        
+                            <h6 class="text-muted card-subtitle mb-2"
+                                style="font-family: Roboto, sans-serif;color: #a5a5a5;"><strong>D</strong>ecrypting <strong>R</strong>SA with <strong>O</strong>bsolete and <strong>W</strong>eakened e<strong>N</strong>cryption
+                            </h6>
+                        
+                        <p class="card-text"
+                            style="font-family: 'Roboto Condensed', sans-serif;color: #6c757d;font-style: italic;">
+                            By exploiting export-grade symmetric ciphers supported by SSLv2, an attacker is able to retrieve the <code>MasterSecret</code> that identifies the TLS session. The attack is performed by sniffing the network (or intentionally making requests to the server) looking for a vulnerable connection. Once found, the attacker repeatedly connects to the server using SSLv2 with export-grade RSA and a <code>ClientMasterKey</code> derived from the transmission he wants to decrypt. The <code>MasterSecret</code> can be used to decrypt the content of the transmission.
+                        </p>
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            <h5 style="color: #000000;font-family: Roboto, sans-serif;">Mitigation</h5>
+                            <ul class="list-group list-group-flush" style="border-style: solid;border-color: #8db53d;">
+
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Textual</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">Disable SSLv2 protocol support.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Apache</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. open your Apache configuration file (default: <i>/etc/apache2/sites-available/default-ssl.conf</i>);<br/>2. search for the line starting with: <strong>SSLProtocol</strong><br/>   - if it contains the substring <code>+SSLv2</code>, remove it;<br/>   - otherwise, add <code>-SSLv2</code> at the end of the line.<br/><br/>N.B. restart the server by typing: <code>sudo service apache2 restart</code>.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>nginx</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. In a default situation, you can edit your website configuration <i>/etc/nginx/sites-enabled/default</i><br/> (if you changed your site conf name <i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>);<br/>2. Inside <code>server {...}</code> brackets configuration, find <code>ssl_protocols</code>;<br/>3. Remove <code>SSLv2</code> (if any). Make sure you have atleast another TLS protocol. If you can't find <code>ssl_protocols</code> you should be fine if your nginx is updated.<br/><br/><br/>N.B. restart the server by typing: <code>sudo service nginx restart</code>.<br/></p>
+                                    </p>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                        
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            
+                            <div class="accordion" role="tablist" id="accordion-5"
+                                style="border-width: 3px;border-radius: 0px,0px,3px,3px;">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" role="tab"><button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse" data-bs-target="#accordion-5 .item-1"
+                                            aria-expanded="false" aria-controls="accordion-5 .item-1"
+                                            style="border-style: solid;border-color: #8db53d;font-weight: bold;font-family: Roboto, sans-serif;color: #000000;">RAW
+                                            Output</button></h2>
+                                    <div class="accordion-collapse collapse item-1" role="tabpanel"
+                                        data-bs-parent="#accordion-5"
+                                        style="border-style: solid;border-color: #0068b4;border-top-style: none;border-bottom-style: none;height: 200px;">
+                                        <div class="accordion-body"><textarea onclick="this.focus();this.select()"
+                                                style="max-width: 100%;min-width: 100%;width: 100%;height: 150px;min-height: 0px;max-height: none;border-radius: 3px;font-family: 'Roboto Mono', monospace;background: #f5faff;color: #0068b4;border-width: 3px;border-color: #0068b4;border-top-style: none;border-right-color: #acd5fe;border-bottom-style: none;border-left-color: #acd5fe;padding: 12px;margin: 0px;font-size: 13px;margin-top: 10px;"
+                                                readonly="" name="raw_code">{ 'cve': 'CVE-2016-0800 CVE-2016-0703',
+  'cwe': 'CWE-310',
+  'finding': "VULNERABLE, SSLv2 offered with 4 ciphers. Make sure you don't "
+             'use this certificate elsewhere, see '
+             'https://search.censys.io/search?resource=hosts&virtual_hosts=INCLUDE&q=973CCD2911A404BB219DF3BCC6BCB7629196E73634A2389BDB06CD71D8B1BB43',
+  'ip': ['127.0.0.1'],
+  'key': ['DROWN'],
+  'port': '4444',
+  'severity': 'CRITICAL'}</textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                
+                
+                
+                
+                
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">HSTS not preloaded</h3>
+
+                        <h6 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">
+                            
+                            
+                                
+                                
+                            
+                                
+                                
+                            
+                                
+                                
+                            
+                            </h6>
+                        
+                        <p class="card-text"
+                            style="font-family: 'Roboto Condensed', sans-serif;color: #6c757d;font-style: italic;">
+                            If the HSTS header is preloaded but the webserver does not have a valid certificate, the user will not be able to access the target website.
+                        </p>
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            <h5 style="color: #000000;font-family: Roboto, sans-serif;">Mitigation</h5>
+                            <ul class="list-group list-group-flush" style="border-style: solid;border-color: #8db53d;">
+
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Textual</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">Check if your certificate has expired or it is not valid. If it is not valid, get a new certificate and deploy it on your server. If it has expired, renew it and deploy it on your server.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Apache</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">No snippet available</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>nginx</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">No snippet available</p>
+                                    </p>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                        
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            
+                            <div class="accordion" role="tablist" id="accordion-6"
+                                style="border-width: 3px;border-radius: 0px,0px,3px,3px;">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" role="tab"><button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse" data-bs-target="#accordion-6 .item-1"
+                                            aria-expanded="false" aria-controls="accordion-6 .item-1"
+                                            style="border-style: solid;border-color: #8db53d;font-weight: bold;font-family: Roboto, sans-serif;color: #000000;">RAW
+                                            Output</button></h2>
+                                    <div class="accordion-collapse collapse item-1" role="tabpanel"
+                                        data-bs-parent="#accordion-6"
+                                        style="border-style: solid;border-color: #0068b4;border-top-style: none;border-bottom-style: none;height: 200px;">
+                                        <div class="accordion-body"><textarea onclick="this.focus();this.select()"
+                                                style="max-width: 100%;min-width: 100%;width: 100%;height: 150px;min-height: 0px;max-height: none;border-radius: 3px;font-family: 'Roboto Mono', monospace;background: #f5faff;color: #0068b4;border-width: 3px;border-color: #0068b4;border-top-style: none;border-right-color: #acd5fe;border-bottom-style: none;border-left-color: #acd5fe;padding: 12px;margin: 0px;font-size: 13px;margin-top: 10px;"
+                                                readonly="" name="raw_code">{ 'HSTS_NOT_PRELOADED': { 'localhost': True,
+                          'mitigation': { '#omit-xml-declaration': 'yes',
+                                          'Entry': { 'Description': 'If the '
+                                                                    'HSTS '
+                                                                    'header is '
+                                                                    'preloaded '
+                                                                    'but the '
+                                                                    'webserver '
+                                                                    'does not '
+                                                                    'have a '
+                                                                    'valid '
+                                                                    'certificate, '
+                                                                    'the user '
+                                                                    'will not '
+                                                                    'be able '
+                                                                    'to access '
+                                                                    'the '
+                                                                    'target '
+                                                                    'website.',
+                                                     'ExtendedName': 'HSTS not '
+                                                                     'preloaded',
+                                                     'Mitigation': { 'Apache': 'No '
+                                                                               'snippet '
+                                                                               'available',
+                                                                     'Textual': 'Check '
+                                                                                'if '
+                                                                                'your '
+                                                                                'certificate '
+                                                                                'has '
+                                                                                'expired '
+                                                                                'or '
+                                                                                'it '
+                                                                                'is '
+                                                                                'not '
+                                                                                'valid. '
+                                                                                'If '
+                                                                                'it '
+                                                                                'is '
+                                                                                'not '
+                                                                                'valid, '
+                                                                                'get '
+                                                                                'a '
+                                                                                'new '
+                                                                                'certificate '
+                                                                                'and '
+                                                                                'deploy '
+                                                                                'it '
+                                                                                'on '
+                                                                                'your '
+                                                                                'server. '
+                                                                                'If '
+                                                                                'it '
+                                                                                'has '
+                                                                                'expired, '
+                                                                                'renew '
+                                                                                'it '
+                                                                                'and '
+                                                                                'deploy '
+                                                                                'it '
+                                                                                'on '
+                                                                                'your '
+                                                                                'server.',
+                                                                     'nginx': 'No '
+                                                                              'snippet '
+                                                                              'available'},
+                                                     'Name': 'HSTS not '
+                                                             'preloaded'}}}}</textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">HSTS not set</h3>
+
+                        <h6 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">
+                            
+                            
+                                
+                                
+                            
+                                
+                                
+                            
+                                
+                                
+                            
+                            </h6>
+                        
+                        <p class="card-text"
+                            style="font-family: 'Roboto Condensed', sans-serif;color: #6c757d;font-style: italic;">
+                            Without the HSTS header, an attacker can use the SSL stripping attack to redirect all the HTTPS connection to their unsecure counterparts. By doing this, all the messages are sent in plaintext and can thus be manipulated.
+                        </p>
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            <h5 style="color: #000000;font-family: Roboto, sans-serif;">Mitigation</h5>
+                            <ul class="list-group list-group-flush" style="border-style: solid;border-color: #8db53d;">
+
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Textual</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">Enable the HSTS header transmission within the webserver's settings.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Apache</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. open your Apache configuration file (default: <i>/etc/apache2/sites-available/default-ssl.conf</i>);<br/>2. add the line <code>Header always set Strict-Transport-Security "max-age=31536000"</code>.<br/><br/>N.B. restart the server by typing: <code>sudo service apache2 restart</code> and be sure that <code>mod_headers</code> is enabled.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>nginx</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. In a default situation, you can edit your website configuration <i>/etc/nginx/sites-enabled/default</i><br/> (if you changed your site conf name <i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>);<br/>2. Add inside <code>server{...}</code> brackets: <code>add_header Strict-Transport-Security "max-age=31536000; includeSubdomains; preload";</code><br/><br/>N.B. restart the server by typing: <code>sudo service nginx restart</code>.</p>
+                                    </p>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                        
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            
+                            <div class="accordion" role="tablist" id="accordion-7"
+                                style="border-width: 3px;border-radius: 0px,0px,3px,3px;">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" role="tab"><button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse" data-bs-target="#accordion-7 .item-1"
+                                            aria-expanded="false" aria-controls="accordion-7 .item-1"
+                                            style="border-style: solid;border-color: #8db53d;font-weight: bold;font-family: Roboto, sans-serif;color: #000000;">RAW
+                                            Output</button></h2>
+                                    <div class="accordion-collapse collapse item-1" role="tabpanel"
+                                        data-bs-parent="#accordion-7"
+                                        style="border-style: solid;border-color: #0068b4;border-top-style: none;border-bottom-style: none;height: 200px;">
+                                        <div class="accordion-body"><textarea onclick="this.focus();this.select()"
+                                                style="max-width: 100%;min-width: 100%;width: 100%;height: 150px;min-height: 0px;max-height: none;border-radius: 3px;font-family: 'Roboto Mono', monospace;background: #f5faff;color: #0068b4;border-width: 3px;border-color: #0068b4;border-top-style: none;border-right-color: #acd5fe;border-bottom-style: none;border-left-color: #acd5fe;padding: 12px;margin: 0px;font-size: 13px;margin-top: 10px;"
+                                                readonly="" name="raw_code">{ 'HSTS_NOT_SET': { 'localhost': True,
+                    'mitigation': { '#omit-xml-declaration': 'yes',
+                                    'Entry': { 'Description': 'Without the '
+                                                              'HSTS header, an '
+                                                              'attacker can '
+                                                              'use the SSL '
+                                                              'stripping '
+                                                              'attack to '
+                                                              'redirect all '
+                                                              'the HTTPS '
+                                                              'connection to '
+                                                              'their unsecure '
+                                                              'counterparts. '
+                                                              'By doing this, '
+                                                              'all the '
+                                                              'messages are '
+                                                              'sent in '
+                                                              'plaintext and '
+                                                              'can thus be '
+                                                              'manipulated.',
+                                               'ExtendedName': 'HSTS not set',
+                                               'Mitigation': { 'Apache': '1. '
+                                                                         'open '
+                                                                         'your '
+                                                                         'Apache '
+                                                                         'configuration '
+                                                                         'file '
+                                                                         '(default: '
+                                                                         '<i>/etc/apache2/sites-available/default-ssl.conf</i>);<br/>2. '
+                                                                         'add '
+                                                                         'the '
+                                                                         'line '
+                                                                         '<code>Header '
+                                                                         'always '
+                                                                         'set '
+                                                                         'Strict-Transport-Security '
+                                                                         '"max-age=31536000"</code>.<br/><br/>N.B. '
+                                                                         'restart '
+                                                                         'the '
+                                                                         'server '
+                                                                         'by '
+                                                                         'typing: '
+                                                                         '<code>sudo '
+                                                                         'service '
+                                                                         'apache2 '
+                                                                         'restart</code> '
+                                                                         'and '
+                                                                         'be '
+                                                                         'sure '
+                                                                         'that '
+                                                                         '<code>mod_headers</code> '
+                                                                         'is '
+                                                                         'enabled.',
+                                                               'Textual': 'Enable '
+                                                                          'the '
+                                                                          'HSTS '
+                                                                          'header '
+                                                                          'transmission '
+                                                                          'within '
+                                                                          'the '
+                                                                          "webserver's "
+                                                                          'settings.',
+                                                               'nginx': '1. In '
+                                                                        'a '
+                                                                        'default '
+                                                                        'situation, '
+                                                                        'you '
+                                                                        'can '
+                                                                        'edit '
+                                                                        'your '
+                                                                        'website '
+                                                                        'configuration '
+                                                                        '<i>/etc/nginx/sites-enabled/default</i><br/> '
+                                                                        '(if '
+                                                                        'you '
+                                                                        'changed '
+                                                                        'your '
+                                                                        'site '
+                                                                        'conf '
+                                                                        'name '
+                                                                        '<i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>);<br/>2. '
+                                                                        'Add '
+                                                                        'inside '
+                                                                        '<code>server{...}</code> '
+                                                                        'brackets: '
+                                                                        '<code>add_header '
+                                                                        'Strict-Transport-Security '
+                                                                        '"max-age=31536000; '
+                                                                        'includeSubdomains; '
+                                                                        'preload";</code><br/><br/>N.B. '
+                                                                        'restart '
+                                                                        'the '
+                                                                        'server '
+                                                                        'by '
+                                                                        'typing: '
+                                                                        '<code>sudo '
+                                                                        'service '
+                                                                        'nginx '
+                                                                        'restart</code>.'},
+                                               'Name': 'HSTS not set'}}}}</textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">HTTPS not enforced</h3>
+
+                        <h6 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">
+                            
+                            
+                                
+                                
+                            
+                                
+                                
+                            
+                                
+                                
+                            
+                            </h6>
+                        
+                        <p class="card-text"
+                            style="font-family: 'Roboto Condensed', sans-serif;color: #6c757d;font-style: italic;">
+                            If HTTPS is not enforced, a client may be tricked into visiting the unsecure (HTTP) version of a website. This would allow an attacker to read and manipulate his messages.
+                        </p>
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            <h5 style="color: #000000;font-family: Roboto, sans-serif;">Mitigation</h5>
+                            <ul class="list-group list-group-flush" style="border-style: solid;border-color: #8db53d;">
+
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Textual</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">For each HTTP connection the server must send a response containing: <br/>1. a permanent redirect (i.e. <code>301 Moved Permanently</code>);<br/>2. a <code>Location</code> field indicating the proper URI to connect to (hostname preceded by <i>https://</i>).</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Apache</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. open your Apache configuration file (default: <i>/etc/apache2/sites-available/default-ssl.conf</i>);<br/>2. find the VirtualHost that handles the connections to port 80 (it starts with <code>&lt;VirtualHost :80</code>);<br/>3. add the string <code>Redirect / https://website</code> where "website" is the URL you want to point the users to (e.g. www.fbk.eu).<br/><br/>N.B. restart the server by typing: <code>sudo service apache2 restart</code>.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>nginx</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. In a default situation, you can edit your website configuration <i>/etc/nginx/sites-enabled/default</i><br/> (if you changed your site conf name <i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>);<br/>2. add <br/>  <code>server {<br/>     listen 80 default_server;<br/>     server_name _;<br/>     return 301 https://$host$request_uri;<br/>  }</code><br/>3. remove ALL other <code>listen 80</code> inside <code>server{...}</code> brackets (except for the previous one)<br/><br/><br/>N.B. restart the server by typing: <code>sudo service nginx restart</code>.<br/></p>
+                                    </p>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                        
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            
+                            <div class="accordion" role="tablist" id="accordion-8"
+                                style="border-width: 3px;border-radius: 0px,0px,3px,3px;">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" role="tab"><button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse" data-bs-target="#accordion-8 .item-1"
+                                            aria-expanded="false" aria-controls="accordion-8 .item-1"
+                                            style="border-style: solid;border-color: #8db53d;font-weight: bold;font-family: Roboto, sans-serif;color: #000000;">RAW
+                                            Output</button></h2>
+                                    <div class="accordion-collapse collapse item-1" role="tabpanel"
+                                        data-bs-parent="#accordion-8"
+                                        style="border-style: solid;border-color: #0068b4;border-top-style: none;border-bottom-style: none;height: 200px;">
+                                        <div class="accordion-body"><textarea onclick="this.focus();this.select()"
+                                                style="max-width: 100%;min-width: 100%;width: 100%;height: 150px;min-height: 0px;max-height: none;border-radius: 3px;font-family: 'Roboto Mono', monospace;background: #f5faff;color: #0068b4;border-width: 3px;border-color: #0068b4;border-top-style: none;border-right-color: #acd5fe;border-bottom-style: none;border-left-color: #acd5fe;padding: 12px;margin: 0px;font-size: 13px;margin-top: 10px;"
+                                                readonly="" name="raw_code">{ 'HTTPS_NOT_ENFORCED': { 'localhost': True,
+                          'mitigation': { '#comment': ' '
+                                                      'https://tools.ietf.org/pdf/rfc6797.pdf '
+                                                      '#Section 7.2 ',
+                                          '#omit-xml-declaration': 'yes',
+                                          'Entry': { 'Description': 'If HTTPS '
+                                                                    'is not '
+                                                                    'enforced, '
+                                                                    'a client '
+                                                                    'may be '
+                                                                    'tricked '
+                                                                    'into '
+                                                                    'visiting '
+                                                                    'the '
+                                                                    'unsecure '
+                                                                    '(HTTP) '
+                                                                    'version '
+                                                                    'of a '
+                                                                    'website. '
+                                                                    'This '
+                                                                    'would '
+                                                                    'allow an '
+                                                                    'attacker '
+                                                                    'to read '
+                                                                    'and '
+                                                                    'manipulate '
+                                                                    'his '
+                                                                    'messages.',
+                                                     'ExtendedName': 'HTTPS '
+                                                                     'not '
+                                                                     'enforced',
+                                                     'Mitigation': { 'Apache': '1. '
+                                                                               'open '
+                                                                               'your '
+                                                                               'Apache '
+                                                                               'configuration '
+                                                                               'file '
+                                                                               '(default: '
+                                                                               '<i>/etc/apache2/sites-available/default-ssl.conf</i>);<br/>2. '
+                                                                               'find '
+                                                                               'the '
+                                                                               'VirtualHost '
+                                                                               'that '
+                                                                               'handles '
+                                                                               'the '
+                                                                               'connections '
+                                                                               'to '
+                                                                               'port '
+                                                                               '80 '
+                                                                               '(it '
+                                                                               'starts '
+                                                                               'with '
+                                                                               '<code>&lt;VirtualHost '
+                                                                               ':80</code>);<br/>3. '
+                                                                               'add '
+                                                                               'the '
+                                                                               'string '
+                                                                               '<code>Redirect '
+                                                                               '/ '
+                                                                               'https://website</code> '
+                                                                               'where '
+                                                                               '"website" '
+                                                                               'is '
+                                                                               'the '
+                                                                               'URL '
+                                                                               'you '
+                                                                               'want '
+                                                                               'to '
+                                                                               'point '
+                                                                               'the '
+                                                                               'users '
+                                                                               'to '
+                                                                               '(e.g. '
+                                                                               'www.fbk.eu).<br/><br/>N.B. '
+                                                                               'restart '
+                                                                               'the '
+                                                                               'server '
+                                                                               'by '
+                                                                               'typing: '
+                                                                               '<code>sudo '
+                                                                               'service '
+                                                                               'apache2 '
+                                                                               'restart</code>.',
+                                                                     'Textual': 'For '
+                                                                                'each '
+                                                                                'HTTP '
+                                                                                'connection '
+                                                                                'the '
+                                                                                'server '
+                                                                                'must '
+                                                                                'send '
+                                                                                'a '
+                                                                                'response '
+                                                                                'containing: '
+                                                                                '<br/>1. '
+                                                                                'a '
+                                                                                'permanent '
+                                                                                'redirect '
+                                                                                '(i.e. '
+                                                                                '<code>301 '
+                                                                                'Moved '
+                                                                                'Permanently</code>);<br/>2. '
+                                                                                'a '
+                                                                                '<code>Location</code> '
+                                                                                'field '
+                                                                                'indicating '
+                                                                                'the '
+                                                                                'proper '
+                                                                                'URI '
+                                                                                'to '
+                                                                                'connect '
+                                                                                'to '
+                                                                                '(hostname '
+                                                                                'preceded '
+                                                                                'by '
+                                                                                '<i>https://</i>).',
+                                                                     'nginx': '1. '
+                                                                              'In '
+                                                                              'a '
+                                                                              'default '
+                                                                              'situation, '
+                                                                              'you '
+                                                                              'can '
+                                                                              'edit '
+                                                                              'your '
+                                                                              'website '
+                                                                              'configuration '
+                                                                              '<i>/etc/nginx/sites-enabled/default</i><br/> '
+                                                                              '(if '
+                                                                              'you '
+                                                                              'changed '
+                                                                              'your '
+                                                                              'site '
+                                                                              'conf '
+                                                                              'name '
+                                                                              '<i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>);<br/>2. '
+                                                                              'add '
+                                                                              '<br/>  '
+                                                                              '<code>server '
+                                                                              '{<br/>     '
+                                                                              'listen '
+                                                                              '80 '
+                                                                              'default_server;<br/>     '
+                                                                              'server_name '
+                                                                              '_;<br/>     '
+                                                                              'return '
+                                                                              '301 '
+                                                                              'https://$host$request_uri;<br/>  '
+                                                                              '}</code><br/>3. '
+                                                                              'remove '
+                                                                              'ALL '
+                                                                              'other '
+                                                                              '<code>listen '
+                                                                              '80</code> '
+                                                                              'inside '
+                                                                              '<code>server{...}</code> '
+                                                                              'brackets '
+                                                                              '(except '
+                                                                              'for '
+                                                                              'the '
+                                                                              'previous '
+                                                                              'one)<br/><br/><br/>N.B. '
+                                                                              'restart '
+                                                                              'the '
+                                                                              'server '
+                                                                              'by '
+                                                                              'typing: '
+                                                                              '<code>sudo '
+                                                                              'service '
+                                                                              'nginx '
+                                                                              'restart</code>.<br/>'},
+                                                     'Name': 'HTTPS not '
+                                                             'enforced'}}}}</textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                
+                
+                
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">Lucky 13</h3>
+
+                        <h6 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">
+                            
+                            
+                                CVE:&nbsp;2013-0169 
+                                
+                            
+                                CVSS2:&nbsp;2.6 (Low) 
+                                
+                            
+                                
+                                
+                            
+                            </h6>
+                        
+                        <p class="card-text"
+                            style="font-family: 'Roboto Condensed', sans-serif;color: #6c757d;font-style: italic;">
+                            By exploiting the structure of the Cipher Block Chaining (CBC) mode, an attacker can infer the content of a transmission. The attack is performed by capturing, tampering (actually damaging) and re-transmitting the messages sent by the client to see how the server responds.<br/>The attack, by breaching in the authentication mechanism, has a serious impact on the transmission.
+                        </p>
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            <h5 style="color: #000000;font-family: Roboto, sans-serif;">Mitigation</h5>
+                            <ul class="list-group list-group-flush" style="border-style: solid;border-color: #8db53d;">
+
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Textual</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">Update the TLS library to a version that contains the custom mitigations (e.g. OpenSSL v1.0.1e+).</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Apache</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">No snippet available</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>nginx</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">The best mitigation is to update the OpenSSL libraries. The fastest mitigation is to disable all CBC ciphers.<br/><br/>1. In a default situation, you can edit your website configuration <i>/etc/nginx/sites-enabled/default</i><br/> (if you changed your site conf name <i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>);<br/>2. Inside <code>server {...}</code> brackets configuration, find <code>ssl_ciphers</code>;<br/>3. Remove any CBC-related cipher (even nested one).<br/><br/><br/>N.B. restart the server by typing: <code>sudo service nginx restart</code>.<br/></p>
+                                    </p>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                        
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            
+                            <div class="accordion" role="tablist" id="accordion-9"
+                                style="border-width: 3px;border-radius: 0px,0px,3px,3px;">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" role="tab"><button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse" data-bs-target="#accordion-9 .item-1"
+                                            aria-expanded="false" aria-controls="accordion-9 .item-1"
+                                            style="border-style: solid;border-color: #8db53d;font-weight: bold;font-family: Roboto, sans-serif;color: #000000;">RAW
+                                            Output</button></h2>
+                                    <div class="accordion-collapse collapse item-1" role="tabpanel"
+                                        data-bs-parent="#accordion-9"
+                                        style="border-style: solid;border-color: #0068b4;border-top-style: none;border-bottom-style: none;height: 200px;">
+                                        <div class="accordion-body"><textarea onclick="this.focus();this.select()"
+                                                style="max-width: 100%;min-width: 100%;width: 100%;height: 150px;min-height: 0px;max-height: none;border-radius: 3px;font-family: 'Roboto Mono', monospace;background: #f5faff;color: #0068b4;border-width: 3px;border-color: #0068b4;border-top-style: none;border-right-color: #acd5fe;border-bottom-style: none;border-left-color: #acd5fe;padding: 12px;margin: 0px;font-size: 13px;margin-top: 10px;"
+                                                readonly="" name="raw_code">{ 'cve': 'CVE-2013-0169',
+  'cwe': 'CWE-310',
+  'finding': 'potentially vulnerable, uses TLS CBC ciphers',
+  'ip': ['127.0.0.1'],
+  'key': ['LUCKY13'],
+  'port': '4444',
+  'severity': 'LOW'}</textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">SSL POODLE</h3>
+
+                        <h6 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">
+                            
+                            
+                                CVE:&nbsp;2014-3566 
+                                
+                            
+                                
+                                
+                            
+                                CVSS3:&nbsp;3.4 (Low) 
+                                
+                            
+                            </h6>
+                        
+                            <h6 class="text-muted card-subtitle mb-2"
+                                style="font-family: Roboto, sans-serif;color: #a5a5a5;">SSL <strong>P</strong>adding <strong>O</strong>racle <strong>O</strong>n <strong>D</strong>owngraded <strong>L</strong>egacy <strong>E</strong>ncryption
+                            </h6>
+                        
+                        <p class="card-text"
+                            style="font-family: 'Roboto Condensed', sans-serif;color: #6c757d;font-style: italic;">
+                            By exploiting the missing validation of the padding bytes during decryption, an attacker is able to guess the session cookie. The attack is mounted by performing a MITM and requesting a SSLv3 connection between the client and the server. Once accepted, the attack is performed by modifying the padding in order to guess the cookie.
+                        </p>
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            <h5 style="color: #000000;font-family: Roboto, sans-serif;">Mitigation</h5>
+                            <ul class="list-group list-group-flush" style="border-style: solid;border-color: #8db53d;">
+
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Textual</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">Disable SSLv3 protocol support.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Apache</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. open your Apache configuration file (default: <i>/etc/apache2/sites-available/default-ssl.conf</i>);<br/>2. search for the line starting with: <strong>SSLProtocol</strong><br/>   - if it contains the substring <code>+SSLv3</code>, remove it;<br/>   - otherwise, add <code>-SSLv3</code> at the end of the line.<br/><br/>N.B. restart the server by typing: <code>sudo service apache2 restart</code>.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>nginx</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. In a default situation, you can edit your website configuration <i>/etc/nginx/sites-enabled/default</i><br/> (if you changed your site conf name <i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>);<br/>2. Inside <code>server {...}</code> brackets configuration, find <code>ssl_protocols</code>;<br/>3. Remove <code>SSLv3</code> (if any). Make sure you have atleast another TLS protocol. If you can't find <code>ssl_protocols</code> you should be fine if your nginx is updated.<br/><br/><br/>N.B. restart the server by typing: <code>sudo service nginx restart</code>.<br/></p>
+                                    </p>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                        
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            
+                            <div class="accordion" role="tablist" id="accordion-10"
+                                style="border-width: 3px;border-radius: 0px,0px,3px,3px;">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" role="tab"><button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse" data-bs-target="#accordion-10 .item-1"
+                                            aria-expanded="false" aria-controls="accordion-10 .item-1"
+                                            style="border-style: solid;border-color: #8db53d;font-weight: bold;font-family: Roboto, sans-serif;color: #000000;">RAW
+                                            Output</button></h2>
+                                    <div class="accordion-collapse collapse item-1" role="tabpanel"
+                                        data-bs-parent="#accordion-10"
+                                        style="border-style: solid;border-color: #0068b4;border-top-style: none;border-bottom-style: none;height: 200px;">
+                                        <div class="accordion-body"><textarea onclick="this.focus();this.select()"
+                                                style="max-width: 100%;min-width: 100%;width: 100%;height: 150px;min-height: 0px;max-height: none;border-radius: 3px;font-family: 'Roboto Mono', monospace;background: #f5faff;color: #0068b4;border-width: 3px;border-color: #0068b4;border-top-style: none;border-right-color: #acd5fe;border-bottom-style: none;border-left-color: #acd5fe;padding: 12px;margin: 0px;font-size: 13px;margin-top: 10px;"
+                                                readonly="" name="raw_code">{ 'cve': 'CVE-2014-3566',
+  'cwe': 'CWE-310',
+  'finding': 'VULNERABLE, uses SSLv3+CBC',
+  'ip': ['127.0.0.1'],
+  'key': ['POODLE_SSL'],
+  'port': '4444',
+  'severity': 'HIGH'}</textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">Sweet32</h3>
+
+                        <h6 class="card-title" style="color: #000000;font-family: Roboto, sans-serif;">
+                            
+                            
+                                CVE:&nbsp;2016-2183 
+                                
+                            
+                                
+                                
+                            
+                                CVSS3:&nbsp;7.5 (High) 
+                                
+                            
+                            </h6>
+                        
+                        <p class="card-text"
+                            style="font-family: 'Roboto Condensed', sans-serif;color: #6c757d;font-style: italic;">
+                            By exploiting the block size of the 3DES CBC ciphers, an attacker is able to mount a birthday attack. Once the victim has (forcefully) generated the needed amount of data (approximately 2^32 blocks of data) its confidentiality can be affected due to the information leakage caused by the collisions in the cipher.<br/>
+                        </p>
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            <h5 style="color: #000000;font-family: Roboto, sans-serif;">Mitigation</h5>
+                            <ul class="list-group list-group-flush" style="border-style: solid;border-color: #8db53d;">
+
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Textual</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">Disable support for 3DES cipher suites.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>Apache</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. open your Apache configuration file (default: <i>/etc/apache2/sites-available/default-ssl.conf</i>);<br/>2. find the line starting with: <strong>SSLCipherSuite</strong>;<br/>3. add the string <code>:!3DES</code> at the end.<br/><br/>N.B. restart the server by typing: <code>sudo service apache2 restart</code>.</p>
+                                    </p>
+                                </li>
+                                
+                                <li class="list-group-item" style="border-radius: 4px;border-style: none;">
+                                    <h5 class="mb-0"
+                                        style="border-style: none;border-bottom-style: none;font-family: Roboto, sans-serif;">
+                                        <strong>nginx</strong>
+                                    </h5>
+                                    <p style="font-family: Roboto, sans-serif;text-align: justify;margin: 3px;">1. In a default situation, you can edit your website configuration <i>/etc/nginx/sites-enabled/default</i><br/> (if you changed your site conf name <i>/etc/nginx/sites-enabled/YOURSITECONFIGURATION</i>);<br/>2. Inside <code>server {...}</code> brackets configuration, find <code>ssl_ciphers</code>;<br/>3. Remove <strong>3DES</strong> (if any) and add <strong>:!3DES</strong> at the end. <br/>4. Re run this tool. If it appears again,  Remove <strong>IDEA</strong> (if any) and add <strong>:!IDEA</strong> at the end. <br/>5. Re run this tool. If it appears again,  Remove <strong>RSA</strong> (if any) and add <strong>:!RSA</strong> at the end.<br/><br/><br/>N.B. restart the server by typing: <code>sudo service nginx restart</code>.<br/></p>
+                                    </p>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                        
+                        
+                        <div class="card" style="border-style: none;padding: 2px;margin: 0px;">
+                            
+                            <div class="accordion" role="tablist" id="accordion-11"
+                                style="border-width: 3px;border-radius: 0px,0px,3px,3px;">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" role="tab"><button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse" data-bs-target="#accordion-11 .item-1"
+                                            aria-expanded="false" aria-controls="accordion-11 .item-1"
+                                            style="border-style: solid;border-color: #8db53d;font-weight: bold;font-family: Roboto, sans-serif;color: #000000;">RAW
+                                            Output</button></h2>
+                                    <div class="accordion-collapse collapse item-1" role="tabpanel"
+                                        data-bs-parent="#accordion-11"
+                                        style="border-style: solid;border-color: #0068b4;border-top-style: none;border-bottom-style: none;height: 200px;">
+                                        <div class="accordion-body"><textarea onclick="this.focus();this.select()"
+                                                style="max-width: 100%;min-width: 100%;width: 100%;height: 150px;min-height: 0px;max-height: none;border-radius: 3px;font-family: 'Roboto Mono', monospace;background: #f5faff;color: #0068b4;border-width: 3px;border-color: #0068b4;border-top-style: none;border-right-color: #acd5fe;border-bottom-style: none;border-left-color: #acd5fe;padding: 12px;margin: 0px;font-size: 13px;margin-top: 10px;"
+                                                readonly="" name="raw_code">{ 'cve': 'CVE-2016-2183 CVE-2016-6329',
+  'cwe': 'CWE-327',
+  'finding': 'uses 64 bit block ciphers for SSLv2 and above',
+  'ip': ['127.0.0.1'],
+  'key': ['SWEET32'],
+  'port': '4444',
+  'severity': 'LOW'}</textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                
+                
+                
+                
+                
+            </div>
+            
+            
+        </div>
+        <footer class="text-center footer-basic"
+            style="background: rgba(255,255,255,0);padding-bottom: 5px;padding-top: 72px;"><img class="img-fluid"
+                src="assets/img/FBK_Cybersecurity_white.png" style="width: 150px;">
+            
+            
+            <p class="copyright" style="color: #a5a5a5;font-family: Roboto, sans-serif;font-size: 14px;">FBK - Security
+                And Trust Unit © 2025</p>
+        </footer><label class="form-label"></label>
+    </header>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,14 @@
+[ req ]
+default_bits       = 512
+default_md         = sha1
+distinguished_name = req_distinguished_name
+prompt             = no
+
+[ req_distinguished_name ]
+C  = XX
+ST = Lab
+L  = Lab
+O  = Example
+OU = Lab
+CN = localhost
+

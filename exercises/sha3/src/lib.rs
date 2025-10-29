@@ -23,7 +23,7 @@ mod tests {
     fn solution() {
         let to_encode: &str =
             "FLAG{the_curse_of_the_hex_is_broken_the_door_of_the_crypt_is_now_open}";
-        let mut hasher = SHA3::new(ShaVariant::SHA3_256);
+        let mut hasher = SHA3::new(ShaVariant::V256);
         hasher.update(to_encode.as_bytes());
 
         let digest = hasher.finalize();
@@ -34,7 +34,7 @@ mod tests {
     #[test]
     fn things() {
         let string = "abc";
-        let mut hasher = SHA3::new(ShaVariant::SHA3_224);
+        let mut hasher = SHA3::new(ShaVariant::V224);
         hasher.update(string.as_bytes());
         hasher.update(b"def");
         let digest = hasher.finalize();
@@ -53,10 +53,10 @@ mod tests {
         ];
 
         let variants = [
-            ShaVariant::SHA3_224,
-            ShaVariant::SHA3_256,
-            ShaVariant::SHA3_384,
-            ShaVariant::SHA3_512,
+            ShaVariant::V224,
+            ShaVariant::V256,
+            ShaVariant::V384,
+            ShaVariant::V512,
         ];
 
         let expected_hashes = [
