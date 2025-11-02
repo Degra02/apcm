@@ -20,27 +20,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /tmp/build
 
 #   nginx-1.9.0.tar.gz
-#   openssl-1.0.1f.tar.gz
+#   openssl-1.0.1u.tar.gz
 COPY ${NginxVersion}.tar.gz ./
 COPY ${OpensslName}.tar.gz ./
 
 RUN tar -xzf ${NginxVersion}.tar.gz && tar -xzf ${OpensslName}.tar.gz
 
-# RUN ./configure \
-#     --with-http_ssl_module \
-#     --with-http_gzip_static_module \
-#     --with-openssl=/tmp/build/${OpensslName} \
-#     --with-openssl-opt="no-tests enable-rc4 zlib enable-ssl2 enable-ssl3" \
-#     --with-cc-opt="-Wno-error"
-
 WORKDIR /tmp/build/${NginxVersion}
 
 RUN ./configure \
-  --with-http_ssl_module \
-  --with-openssl=/tmp/build/${OpensslName} \
-  --with-openssl-opt='no-tests enable-weak-ssl-ciphers enable-rc4 enable-ssl2 enable-des' \
-  --with-http_gzip_static_module \
-  --with-cc-opt="-Wno-error"
+    --with-http_ssl_module \
+    --with-http_gzip_static_module \
+    --with-openssl=/tmp/build/${OpensslName} \
+    --with-openssl-opt="zlib enable-ssl2 enable-ssl3 no-tests enable-weak-ssl-ciphers enable-rc4 enable-des" \
+    --with-cc-opt="-Wno-error"
 
 RUN make -j$(nproc) && make install
 
