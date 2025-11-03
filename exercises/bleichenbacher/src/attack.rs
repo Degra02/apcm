@@ -44,6 +44,13 @@ where
     s.parse::<u32>().map_err(serde::de::Error::custom)
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DecryptRes {
+    pub error: Option<String>,
+    #[serde(deserialize_with = "string_to_u32")]
+    pub time_ns: u32,
+}
+
 #[derive(Debug)]
 pub struct Attacker {
     client: Client,
@@ -60,25 +67,39 @@ impl Attacker {
         }
     }
 
-    pub fn encrypt(&self, plain: &str, repeat: Option<u32>) -> Result<EncryptRes, CustomError> {
+    pub fn encrypt(&self, plain: &[u8], repeat: Option<u32>) -> Result<EncryptRes, CustomError> {
+        let plain_hex = hex::encode(plain);
         let mut full_url = String::new();
         full_url.push_str(&self.url);
-        full_url.push_str(&format!("/encrypt?p={}", plain));
+        full_url.push_str(&format!("/encrypt?p={}", plain_hex));
 
         if let Some(r) = repeat {
             full_url.push_str(&format!("&r={}", r));
         }
 
-        let res = self.client.get(full_url).send()?;
-        serde_json::from_str(&res.text()?).map_err(CustomError::from)
+        let res: EncryptRes = self.client.get(full_url).send()?.json()?;
+        Ok(res)
     }
 
+    pub fn decrypt(&self, cipher: &[u8], repeat: Option<u32>) -> Result<DecryptRes, CustomError> {
+        let cipher_hex = hex::encode(cipher);
+        let mut full_url = String::new();
+        full_url.push_str(&self.url);
+        full_url.push_str(&format!("/decrypt?c={}", cipher_hex));
+
+        if let Some(r) = repeat {
+            full_url.push_str(&format!("&r={}", r));
+        }
+
+        let res: DecryptRes = self.client.get(full_url).send()?.json()?;
+        Ok(res)
+    }
 }
 
 #[test]
 fn deserialize() -> Result<(), CustomError> {
     let attacker = Attacker::new(TEST_URL);
-    let res = attacker.encrypt("ciccio", None)?;
+    let res = attacker.encrypt("ciccio".as_bytes(), None)?;
 
     println!("{:?}", res);
 
