@@ -1,0 +1,10 @@
+[package]
+name = "bleichenbacher"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+hex-literal = "1.1.0"
+reqwest = { version = "0.12.24", features = ["blocking"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
