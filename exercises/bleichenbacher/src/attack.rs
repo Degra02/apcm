@@ -2,8 +2,10 @@
 
 use hex_literal::hex;
 use reqwest::blocking::Client;
+use rsa::RsaPublicKey;
+use serde_json::Value;
 
-use crate::utils::{CustomError, DecryptRes, EncryptRes};
+use crate::utils::{CustomError, DecryptRes, EncryptRes, PublicKeyInfo};
 
 const URL: &str = "https://medieval-adelle-jonistartuplab-17499dda.koyeb.app";
 const TEST_URL: &str = "http://localhost:8000";
@@ -15,16 +17,27 @@ const CIPHERTEXT: [u8; 128] = hex!("2d38aeb156ef11bc165989a12669b30cf20cda8a1962
 pub struct Attacker {
     client: Client,
     url: String,
+    rsa_pubkey: RsaPublicKey,
 }
 
 impl Attacker {
-    pub fn new(url: &str) -> Self {
+    pub fn new(url: &str) -> Result<Self, CustomError> {
         let client = Client::new();
+        let json = client
+            .get(url.to_string())
+            .send()?
+            .text()?;
 
-        Self {
+        let v: Value = serde_json::from_str(&json)?;
+        let public_json = &v["public"];
+
+        let public: PublicKeyInfo = serde_json::from_value(public_json.clone())?;
+
+        Ok(Self {
             client,
-            url: String::from(url)
-        }
+            url: String::from(url),
+            rsa_pubkey: public.to_rsa()?,
+        })
     }
 
     pub fn encrypt(&self, plain: &[u8], repeat: Option<u32>) -> Result<EncryptRes, CustomError> {
@@ -54,14 +67,21 @@ impl Attacker {
         let res: DecryptRes = self.client.get(full_url).send()?.json()?;
         Ok(res)
     }
+
+    pub fn bleichenbacher_attack(&self) -> Result<Vec<u8>, CustomError> {
+        unimplemented!()
+    }
 }
 
 #[test]
 fn deserialize() -> Result<(), CustomError> {
-    let attacker = Attacker::new(TEST_URL);
+    let attacker = Attacker::new(TEST_URL)?;
+    println!("Public key: {:?}", attacker.rsa_pubkey);
+
     let res = attacker.encrypt("ciccio".as_bytes(), None)?;
 
     println!("{:?}", res);
+
 
     Ok(())
 }

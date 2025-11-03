@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use rsa::BigUint;
 use rsa::RsaPublicKey;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -56,7 +58,7 @@ pub struct PublicKeyInfo {
     pub public_modulus_hex: String,
     #[serde(rename = "public_key_size_bits")]
     pub bits: usize,
-    #[serde(rename = "public_exponent_dec")]
+    #[serde(rename = "public_exponent_dec", deserialize_with = "string_to_u32")]
     pub exp: u32,
 }
 
