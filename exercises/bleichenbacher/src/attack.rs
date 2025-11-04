@@ -158,18 +158,18 @@ impl Attacker {
 
         // let mut ri = 2u8 * (prev_s * b - 2u8 * &self.state.B) / &self.state.n;
         // let mut ri = div_ceil(&( 2u8 * (prev_s * b - 2u8 * &self.state.B) ), &self.state.n);
-        let num = &two * (prev_s * b - &two * &self.state.B);
-        let mut ri = div_ceil(&num, &self.state.n);
+        let num = prev_s * b - &two * &self.state.B;
+        let mut ri = &two * div_ceil(&num, &self.state.n);
 
         loop {
             // si = ceil((B + ri*n) / b)
-            let mut si = div_ceil(&(&two * &self.state.B + &ri * &self.state.n), b);
+            let mut si = &(&two * &self.state.B + &ri * &self.state.n) / b;
             // s_end = floor((3B + ri*n) / a)
-            let s_end = div_floor(&(&three * &self.state.B - &one + &ri * &self.state.n), a);
+            let s_end = &(&three * &self.state.B + &ri * &self.state.n) / a;
 
             println!("si: {}, s_end: {}", si, s_end);
 
-            while si <= s_end {
+            while si < s_end {
                 println!("Testing si = {}", si);
                 let c_prime =
                     (&self.state.c * si.modpow(&self.state.e, &self.state.n)) % &self.state.n;
@@ -195,13 +195,10 @@ impl Attacker {
         for (a, b) in &self.state.M {
             let numerator = {
                 let left = a * si;
-                let three_b_minus_1 = &three * &self.state.B - &one;
-                clamp_sub(&left, &three_b_minus_1)
+                let three_b_plus_1 = &three * &self.state.B + &one;
+                clamp_sub(&left, &three_b_plus_1)
             };
             let r_lower = div_ceil(&numerator, &self.state.n);
-            // let r_lower = div_ceil(&(a * si - 3u8 * &self.state.B), &self.state.n);
-            // let r_upper = (b * si - 2u8 * &self.state.B) / &self.state.n;
-            // let r_upper = div_ceil(&(b * si - 2u8 * &self.state.B), &self.state.n);
 
             // r_upper = floor((b*si - 2B) / n) but clamp if negative
             let numerator_up = clamp_sub(&(b * si), &(&two * &self.state.B));
@@ -211,11 +208,14 @@ impl Attacker {
             while r <= r_upper {
                 let lower_bound = std::cmp::max(
                     a.clone(),
-                    (2u8 * &self.state.B + &r * &self.state.n + si - 1u8) / si,
+                    div_ceil(&(2u8 * &self.state.B + &r * &self.state.n), si),
                 );
                 let upper_bound = std::cmp::min(
                     b.clone(),
-                    (3u8 * &self.state.B - 1u8 + &r * &self.state.n) / si,
+                    div_floor(
+                        &(&three * &self.state.B - 1u8 + &r * &self.state.n),
+                        si,
+                    ),
                 );
 
                 if lower_bound <= upper_bound {
