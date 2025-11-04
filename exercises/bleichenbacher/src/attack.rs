@@ -2,9 +2,9 @@
 #![allow(non_snake_case)]
 
 use num_bigint::BigUint;
+use num_traits::{Num, Zero};
 use reqwest::blocking::Client;
 use serde_json::Value;
-use num_traits::Zero;
 
 use crate::utils::{CustomError, DecryptRes, EncryptRes, PublicKeyInfo};
 
@@ -42,6 +42,7 @@ impl Attacker {
         }
 
         let state = AttackState::new(rsa_pubkey, &c);
+
 
         Ok(Self {
             client,
@@ -81,8 +82,13 @@ impl Attacker {
 
     /// Step 1 can be skipped since `c` is already a valid PKCS#1 v1.5 ciphertext.
     pub fn bleichenbacher_attack(&mut self) -> Result<Vec<u8>, CustomError> {
-        println!("Starting attack: k = {}, n_bits = {}", self.state.k, self.state.n.bits());
+        println!(
+            "Starting attack: k = {}, n_bits = {}",
+            self.state.k,
+            self.state.n.bits()
+        );
         println!("Ciphertext length = {}", self.c_bytes.len());
+
 
         let mut si = self.step2a()?;
 
@@ -168,7 +174,7 @@ impl Attacker {
         let mut new_M = Vec::<(BigUint, BigUint)>::new();
 
         for (a, b) in &self.state.M {
-            let r_lower = div_ceil(&( a * si - 3u8 * &self.state.B ), &self.state.n);
+            let r_lower = div_ceil(&(a * si - 3u8 * &self.state.B), &self.state.n);
             // let r_upper = (b * si - 2u8 * &self.state.B) / &self.state.n;
             let r_upper = div_ceil(&(b * si - 2u8 * &self.state.B), &self.state.n);
 
@@ -201,7 +207,6 @@ impl Attacker {
 
         Ok((a * sinv) % &self.state.n)
     }
-
 }
 
 pub fn div_ceil(num: &BigUint, den: &BigUint) -> BigUint {
@@ -215,11 +220,19 @@ pub fn div_ceil(num: &BigUint, den: &BigUint) -> BigUint {
 }
 
 fn to_k_bytes_be(x: &BigUint, k: usize) -> Vec<u8> {
-    let mut x_bytes = x.to_bytes_be();
-    while x_bytes.len() < k {
-        x_bytes.insert(0, 0u8);
+    // let mut x_bytes = x.to_bytes_be();
+    // while x_bytes.len() < k {
+    //     x_bytes.insert(0, 0u8);
+    // }
+    // x_bytes
+    let x_bytes = x.to_bytes_be();
+    if x_bytes.len() < k {
+        let mut padded = vec![0u8; k - x_bytes.len()];
+        padded.extend_from_slice(&x_bytes);
+        padded
+    } else {
+        x_bytes
     }
-    x_bytes
 }
 
 #[derive(Debug)]
@@ -235,10 +248,11 @@ pub struct AttackState {
 impl AttackState {
     pub fn new(rsa_pubkey: PublicKeyInfo, c: &[u8]) -> Self {
         let k = rsa_pubkey.public_key_size_bits / 8;
-        let decoded = hex::decode(&rsa_pubkey.public_modulus_hex).expect("Invalid hex in modulus");
 
+        let decoded = hex::decode(&rsa_pubkey.public_modulus_hex).expect("Invalid hex in modulus");
         let n = BigUint::from_bytes_be(&decoded);
         let e = BigUint::from(rsa_pubkey.public_exponent_dec);
+
 
         // B = 2^(8*(k-2))
         let B = {
@@ -251,14 +265,7 @@ impl AttackState {
         // Initial interval: [2B, 3B - 1]
         let M = vec![(2u8 * &B, 3u8 * &B - 1u8)];
 
-        Self {
-            k,
-            n,
-            B,
-            c,
-            M,
-            e,
-        }
+        Self { k, n, B, c, M, e }
     }
 }
 
@@ -281,11 +288,7 @@ fn test_pkci() -> Result<(), CustomError> {
     println!("Ciphertext: {}", cipher_hex);
 
     let json = client
-        .get(format!(
-            "{}/decrypt?c={}",
-            url,
-            hex::encode(&c)
-        ))
+        .get(format!("{}/decrypt?c={}", url, hex::encode(&c)))
         .send()?
         .text()?;
     let v: Value = serde_json::from_str(&json)?;
