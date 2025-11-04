@@ -26,8 +26,8 @@ impl From<serde_json::Error> for CustomError {
 pub struct EncryptRes {
     pub cipher_hex: String,
 
-    #[serde(deserialize_with = "string_to_u32")]
-    pub time_ns: u32,
+    #[serde(deserialize_with = "string_to_u128")]
+    pub time_ns: u128,
 }
 
 fn string_to_u32<'de, D>(deserializer: D) -> Result<u32, D::Error>
@@ -38,11 +38,19 @@ where
     s.parse::<u32>().map_err(serde::de::Error::custom)
 }
 
+fn string_to_u128<'de, D>(deserializer: D) -> Result<u128, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    s.parse::<u128>().map_err(serde::de::Error::custom)
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DecryptRes {
     pub error: Option<String>,
-    #[serde(deserialize_with = "string_to_u32")]
-    pub time_ns: u32,
+    #[serde(deserialize_with = "string_to_u128")]
+    pub time_ns: u128,
 }
 
 impl DecryptRes {
