@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 
-
 use num_bigint::BigUint;
 use num_traits::{One, Zero};
 use reqwest::blocking::Client;
@@ -91,20 +90,24 @@ impl Attacker {
             ));
         }
 
-        // let mut si = self.step2a()?;
-        let mut si = BigUint::one();
+        let mut s = self.step2a()?;
 
         let mut it = 1u64;
         loop {
-            println!("Iteration {}, si = {}, M.len(): {}", it, si, self.state.M.len());
+            println!(
+                "Iteration {}, si = {}, M.len(): {}",
+                it,
+                s,
+                self.state.M.len()
+            );
             it += 1;
 
             if self.state.M.len() >= 2 {
-                si = self.step2b(&si)?;
+                s = self.step2b(&s)?;
             } else if self.state.M.len() == 1 {
                 if self.state.M[0].0 == self.state.M[0].1 {
                     // only one interval left with a == b
-                    return self.step4(&si).map(|m| {
+                    return self.step4(&s).map(|m| {
                         let mut m_bytes = m.to_bytes_be();
 
                         while m_bytes.len() < self.state.k {
@@ -113,24 +116,21 @@ impl Attacker {
                         m_bytes
                     });
                 } else {
-                    si = self.step2c(&si)?;
+                    s = self.step2c(&s)?;
                 }
             } else {
-                return Err(CustomError::Other(
-                    "No intervals left in M".to_string(),
-                ));
+                return Err(CustomError::Other("No intervals left in M".to_string()));
             }
 
-            println!("Found si = {}", si);
+            println!("Found si = {}", s);
 
             self.state.combine_intervals();
-            self.step3(&si);
+            self.step3(&s);
         }
     }
 
     fn step2a(&mut self) -> Result<BigUint, CustomError> {
-        let b3 = BigUint::from(3u8) * &self.state.B;
-        let mut s = &self.state.n / &b3;
+        let mut s = div_ceil(&self.state.n, &(&BigUint::from(3u8) * &self.state.B));
 
         loop {
             let c_prime = (&self.state.c * s.modpow(&self.state.e, &self.state.n)) % &self.state.n;
@@ -142,7 +142,6 @@ impl Attacker {
             s += BigUint::one();
         }
     }
-
 
     fn step2b(&mut self, prev_s: &BigUint) -> Result<BigUint, CustomError> {
         let mut si = prev_s + BigUint::one();
@@ -163,18 +162,17 @@ impl Attacker {
         let two = BigUint::from(2u8);
         let three = BigUint::from(3u8);
 
-        let num = clamp_sub(&( prev_s * b ), &( &two * &self.state.B ));
-        let mut r = &two * div_ceil(&num, &self.state.n);
+        let mut r = div_ceil(&(&two * (b * prev_s - &two * &self.state.B)), &self.state.n);
 
         loop {
             // si = ceil((B + ri*n) / b)
             let mut s = div_ceil(&(&two * &self.state.B + &r * &self.state.n), b);
             // s_end = floor((3B + ri*n) / a)
-            let s_end = &(&three * &self.state.B + &r * &self.state.n) / a;
+            let s_end = div_ceil(&(&three * &self.state.B + &r * &self.state.n), a);
 
             println!("si: {}, s_end: {}", s, s_end);
 
-            while s < s_end {
+            while s <= s_end {
                 println!("Testing si = {}", s);
                 let c_prime =
                     (&self.state.c * s.modpow(&self.state.e, &self.state.n)) % &self.state.n;
@@ -190,7 +188,7 @@ impl Attacker {
         }
     }
 
-    fn step3(&mut self, si: &BigUint) {
+    fn step3(&mut self, s: &BigUint) {
         let one = BigUint::from(1u8);
         let two = BigUint::from(2u8);
         let three = BigUint::from(3u8);
@@ -198,29 +196,18 @@ impl Attacker {
         let mut new_M = Vec::<Interval>::new();
 
         for (a, b) in &self.state.M {
-            let numerator = {
-                let left = a * si;
-                let three_b_plus_1 = &three * &self.state.B + &one;
-                clamp_sub(&left, &three_b_plus_1)
-            };
-            let r_lower = div_ceil(&numerator, &self.state.n);
-
-            // r_upper = floor((b*si - 2B) / n) but clamp if negative
-            let numerator_up = clamp_sub(&(b * si), &(&two * &self.state.B));
-            let r_upper = div_floor(&numerator_up, &self.state.n);
+            let r_lower = div_ceil(&(a * s - &three * &self.state.B + &one), &self.state.n);
+            let r_upper = (b * s - &two * &self.state.B) / &self.state.n;
 
             let mut r = r_lower.clone();
             while r <= r_upper {
                 let lower_bound = std::cmp::max(
                     a.clone(),
-                    div_ceil(&(2u8 * &self.state.B + &r * &self.state.n), si),
+                    div_ceil(&(2u8 * &self.state.B + &r * &self.state.n), s),
                 );
                 let upper_bound = std::cmp::min(
                     b.clone(),
-                    div_floor(
-                        &(&three * &self.state.B - 1u8 + &r * &self.state.n),
-                        si,
-                    ),
+                    &(&three * &self.state.B - 1u8 + &r * &self.state.n) / s,
                 );
 
                 if lower_bound <= upper_bound {
@@ -258,9 +245,12 @@ fn div_floor(num: &BigUint, den: &BigUint) -> BigUint {
 }
 
 fn clamp_sub(a: &BigUint, b: &BigUint) -> BigUint {
-    if a > b { a - b } else { BigUint::zero() }
+    if a > b {
+        a - b
+    } else {
+        BigUint::zero()
+    }
 }
-
 
 fn to_k_bytes_be(x: &BigUint, k: usize) -> Vec<u8> {
     let mut x_bytes = x.to_bytes_be();
@@ -287,7 +277,8 @@ pub fn unpad_pkcs1_v15(block: &[u8]) -> Result<Vec<u8>, CustomError> {
         }
     }
 
-    let sep_index = sep_index.ok_or_else(|| CustomError::Other("Padding separator 0x00 not found".into()))?;
+    let sep_index =
+        sep_index.ok_or_else(|| CustomError::Other("Padding separator 0x00 not found".into()))?;
 
     // The message starts after the separator
     let message = block[(sep_index + 1)..].to_vec();
