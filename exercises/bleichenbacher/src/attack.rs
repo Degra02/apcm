@@ -2,15 +2,10 @@
 #![allow(non_snake_case)]
 
 use num_bigint::BigUint;
-use once_cell::sync::Lazy;
 use reqwest::blocking::Client;
 use serde_json::Value;
 
 use crate::utils::{CustomError, DecryptRes, EncryptRes, PublicKeyInfo};
-
-pub static ONE: Lazy<BigUint> = Lazy::new(|| BigUint::from(1u32));
-pub static TWO: Lazy<BigUint> = Lazy::new(|| BigUint::from(2u32));
-pub static THREE: Lazy<BigUint> = Lazy::new(|| BigUint::from(3u32));
 
 #[derive(Debug)]
 pub struct Attacker {
@@ -117,27 +112,27 @@ impl Attacker {
     }
 
     fn step2a(&mut self) -> Result<BigUint, CustomError> {
-        let mut s1 = &self.state.n / (&*THREE * &self.state.B);
+        let mut s = &self.state.n / (3u8 * &self.state.B);
         loop {
-            let c_prime = (&self.state.c * s1.modpow(&self.state.e, &self.state.n)) % &self.state.n;
+            let c_prime = (&self.state.c * s.modpow(&self.state.e, &self.state.n)) % &self.state.n;
             let c_prime_bytes = to_k_bytes_be(&c_prime, self.state.k);
-            println!("Step 2a: trying s1 = {}", s1);
             if self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
-                return Ok(s1);
+                return Ok(s);
             } else {
-                s1 += &*ONE;
+                s += 1u8;
             }
         }
     }
 
     fn step2b(&mut self, prev_s: &BigUint) -> Result<BigUint, CustomError> {
-        let mut si = prev_s + &*ONE;
+        let mut si = prev_s + 1u8;
         loop {
             let c_prime = (&self.state.c * si.modpow(&self.state.e, &self.state.n)) % &self.state.n;
-            if self.decrypt(&c_prime.to_bytes_be(), None)?.is_valid_pkcs1() {
+            let c_prime_bytes = to_k_bytes_be(&c_prime, self.state.k);
+            if self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
                 return Ok(si);
             } else {
-                si += &*ONE;
+                si += 1u8;
             }
         }
     }
@@ -146,22 +141,22 @@ impl Attacker {
         let a = &self.state.M[0].0;
         let b = &self.state.M[0].1;
 
-        let mut ri = &*TWO * (prev_s * b - &*TWO * &self.state.B) / &self.state.n;
+        let mut ri = 2u8 * (prev_s * b - 2u8 * &self.state.B) / &self.state.n;
         loop {
             let mut si = (&self.state.B + &ri * &self.state.n) / b;
 
-            while si < (&*THREE * &self.state.B + &ri * &self.state.n) / a {
+            while si < (3u8 * &self.state.B + &ri * &self.state.n) / a {
                 let c_prime =
                     (&self.state.c * si.modpow(&self.state.e, &self.state.n)) % &self.state.n;
 
                 if self.decrypt(&c_prime.to_bytes_be(), None)?.is_valid_pkcs1() {
                     return Ok(si);
                 } else {
-                    si += &*ONE;
+                    si += 1u8;
                 }
             }
 
-            ri += &*ONE;
+            ri += 1u8;
         }
     }
 
@@ -169,24 +164,24 @@ impl Attacker {
         let mut new_M = Vec::<(BigUint, BigUint)>::new();
 
         for (a, b) in &self.state.M {
-            let r_lower = (a * si - &*THREE * &self.state.B + &*ONE) / &self.state.n;
-            let r_upper = (b * si - &*TWO * &self.state.B) / &self.state.n;
+            let r_lower = (a * si - 3u8 * &self.state.B + 1u8) / &self.state.n;
+            let r_upper = (b * si - 2u8 * &self.state.B) / &self.state.n;
 
             let mut r = r_lower.clone();
             while r <= r_upper {
                 let lower_bound = std::cmp::max(
                     a.clone(),
-                    (&*TWO * &self.state.B + &r * &self.state.n + si - &*ONE) / si,
+                    (2u8 * &self.state.B + &r * &self.state.n + si - 1u8) / si,
                 );
                 let upper_bound = std::cmp::min(
                     b.clone(),
-                    (&*THREE * &self.state.B - &*ONE + &r * &self.state.n) / si,
+                    (3u8 * &self.state.B - 1u8 + &r * &self.state.n) / si,
                 );
 
                 if lower_bound <= upper_bound {
                     new_M.push((lower_bound, upper_bound));
                 }
-                r += &*ONE;
+                r += 1u8;
             }
         }
 
@@ -230,14 +225,12 @@ impl AttackState {
         let n = BigUint::from_bytes_be(&decoded);
         let e = BigUint::from(rsa_pubkey.public_exponent_dec);
 
-        println!("Modulus hex: {}\nModulus n: {}", rsa_pubkey.public_modulus_hex, n);
-
         // B = 2^(8*(k-2))
-        let B = &*ONE << (8 * (k - 2));
+        let B = BigUint::from(2u32) << (8 * (k - 2));
         let c = BigUint::from_bytes_be(c);
 
         // Initial interval: [2B, 3B - 1]
-        let M = vec![(&*TWO * &B, &*THREE * &B - &*ONE)];
+        let M = vec![(2u8 * &B, 3u8 * &B - 1u8)];
 
         Self {
             k,
@@ -248,4 +241,38 @@ impl AttackState {
             e,
         }
     }
+}
+
+#[test]
+fn test_pkci() -> Result<(), CustomError> {
+    let client = Client::new();
+    let url = "http://localhost:8000";
+
+    let json = client
+        .get(format!("{}/encrypt?p=attack", url))
+        .send()?
+        .text()?;
+    let v: Value = serde_json::from_str(&json)?;
+    let cipher_hex = v["cipher_hex"]
+        .as_str()
+        .ok_or(CustomError::Other("Error getting cipher_hex".to_string()))?;
+    let c = hex::decode(cipher_hex)
+        .map_err(|e| CustomError::Other(format!("Hex decode error: {}", e)))?;
+
+    println!("Ciphertext: {}", cipher_hex);
+
+    let json = client
+        .get(format!(
+            "{}/decrypt?c={}",
+            url,
+            hex::encode(&c)
+        ))
+        .send()?
+        .text()?;
+    let v: Value = serde_json::from_str(&json)?;
+    let decrypt_res: DecryptRes = serde_json::from_value(v)?;
+    println!("Decrypt response: {:?}", decrypt_res);
+
+
+    Ok(())
 }

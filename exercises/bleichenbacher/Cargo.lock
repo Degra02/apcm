@@ -33,7 +33,6 @@ dependencies = [
  "hex",
  "hex-literal",
  "num-bigint",
- "once_cell",
  "reqwest",
  "serde",
  "serde_json",
