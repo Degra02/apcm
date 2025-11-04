@@ -1,42 +1,57 @@
 #![allow(dead_code)]
+#![allow(non_snake_case)]
 
-use hex_literal::hex;
+use num_bigint::BigUint;
+use once_cell::sync::Lazy;
 use reqwest::blocking::Client;
-use rsa::RsaPublicKey;
 use serde_json::Value;
 
 use crate::utils::{CustomError, DecryptRes, EncryptRes, PublicKeyInfo};
 
-const URL: &str = "https://medieval-adelle-jonistartuplab-17499dda.koyeb.app";
-const TEST_URL: &str = "http://localhost:8000";
-
-const CIPHERTEXT: [u8; 128] = hex!("2d38aeb156ef11bc165989a12669b30cf20cda8a196288a2a24262c9b43bd715ba76dbd8c42337d4ec0d7d40a77fe4a5f37a5a59e0e5e5506abb588225d5f3483f4f4bde4e3771cec55f12c0dcca56f5d9a3110bc50dc47d7d04db8e4e57044574ca101301c1efc64a497af420b286fe6baf3a4adc883a2ed24956c8eb502817");
-
+pub static ONE: Lazy<BigUint> = Lazy::new(|| BigUint::from(1u32));
+pub static TWO: Lazy<BigUint> = Lazy::new(|| BigUint::from(2u32));
+pub static THREE: Lazy<BigUint> = Lazy::new(|| BigUint::from(3u32));
 
 #[derive(Debug)]
 pub struct Attacker {
-    client: Client,
-    url: String,
-    rsa_pubkey: RsaPublicKey,
+    pub client: Client,
+    pub url: String,
+    pub c_bytes: Vec<u8>,
+    pub state: AttackState,
 }
 
 impl Attacker {
-    pub fn new(url: &str) -> Result<Self, CustomError> {
+    pub fn new(url: &str, cipher: Option<&[u8]>) -> Result<Self, CustomError> {
         let client = Client::new();
-        let json = client
-            .get(url.to_string())
-            .send()?
-            .text()?;
-
+        let json = client.get(url.to_string()).send()?.text()?;
         let v: Value = serde_json::from_str(&json)?;
         let public_json = &v["public"];
 
-        let public: PublicKeyInfo = serde_json::from_value(public_json.clone())?;
+        let rsa_pubkey: PublicKeyInfo = serde_json::from_value(public_json.clone())?;
+
+        let mut c = vec![];
+        if let Some(cipher_bytes) = cipher {
+            c.extend_from_slice(cipher_bytes);
+        } else {
+            let json = client
+                .get(format!("{}/encrypt?p={}", url, "attack"))
+                .send()?
+                .text()?;
+            let v: Value = serde_json::from_str(&json)?;
+            let cipher_hex = v["cipher_hex"]
+                .as_str()
+                .ok_or(CustomError::Other("Error getting cipher_hex".to_string()))?;
+            c = hex::decode(cipher_hex)
+                .map_err(|e| CustomError::Other(format!("Hex decode error: {}", e)))?;
+        }
+
+        let state = AttackState::new(rsa_pubkey, &c);
 
         Ok(Self {
             client,
             url: String::from(url),
-            rsa_pubkey: public.to_rsa()?,
+            c_bytes: c,
+            state,
         })
     }
 
@@ -68,20 +83,130 @@ impl Attacker {
         Ok(res)
     }
 
-    pub fn bleichenbacher_attack(&self) -> Result<Vec<u8>, CustomError> {
-        unimplemented!()
+    /// Step 1 can be skipped since `c` is already a valid PKCS#1 v1.5 ciphertext.
+    pub fn bleichenbacher_attack(&mut self) -> Result<Vec<u8>, CustomError> {
+        let res = vec![];
+
+        Ok(res)
+    }
+
+    fn step2a(&mut self) -> Result<BigUint, CustomError> {
+        let mut s1 = &self.state.n / (&*THREE * &self.state.B);
+        loop {
+            let c_prime = (&self.state.c * s1.modpow(&self.state.e, &self.state.n)) % &self.state.n;
+            if self.decrypt(&c_prime.to_bytes_be(), None)?.is_valid_pkcs1() {
+                return Ok(s1);
+            } else {
+                s1 += &*ONE;
+            }
+        }
+    }
+
+    fn step2b(&mut self, prev_s: &BigUint) -> Result<BigUint, CustomError> {
+        let mut si = prev_s + &*ONE;
+        loop {
+            let c_prime = (&self.state.c * si.modpow(&self.state.e, &self.state.n)) % &self.state.n;
+            if self.decrypt(&c_prime.to_bytes_be(), None)?.is_valid_pkcs1() {
+                return Ok(si);
+            } else {
+                si += &*ONE;
+            }
+        }
+    }
+
+    fn step2c(&mut self, prev_s: &BigUint) -> Result<BigUint, CustomError> {
+        let a = &self.state.M[0].0;
+        let b = &self.state.M[0].1;
+
+        let mut ri = &*TWO * (prev_s * b - &*TWO * &self.state.B) / &self.state.n;
+        loop {
+            let mut si = (&self.state.B + &ri * &self.state.n) / b;
+
+            while si < (&*THREE * &self.state.B + &ri * &self.state.n) / a {
+                let c_prime =
+                    (&self.state.c * si.modpow(&self.state.e, &self.state.n)) % &self.state.n;
+
+                if self.decrypt(&c_prime.to_bytes_be(), None)?.is_valid_pkcs1() {
+                    return Ok(si);
+                } else {
+                    si += &*ONE;
+                }
+            }
+
+            ri += &*ONE;
+        }
+    }
+
+    fn step3(&mut self, si: &BigUint) {
+        let mut new_M = Vec::<(BigUint, BigUint)>::new();
+
+        for (a, b) in &self.state.M {
+            let r_lower = (a * si - &*THREE * &self.state.B + &*ONE) / &self.state.n;
+            let r_upper = (b * si - &*TWO * &self.state.B) / &self.state.n;
+
+            let mut r = r_lower.clone();
+            while r <= r_upper {
+                let lower_bound = std::cmp::max(
+                    a.clone(),
+                    (&*TWO * &self.state.B + &r * &self.state.n + si - &*ONE) / si,
+                );
+                let upper_bound = std::cmp::min(
+                    b.clone(),
+                    (&*THREE * &self.state.B - &*ONE + &r * &self.state.n) / si,
+                );
+
+                if lower_bound <= upper_bound {
+                    new_M.push((lower_bound, upper_bound));
+                }
+                r += &*ONE;
+            }
+        }
+
+        self.state.M = new_M;
+    }
+
+    fn step4(&self, s0: &BigUint) -> Result<BigUint, CustomError> {
+        let (a, _) = &self.state.M[0]; // only one interval left
+        let sinv = s0.modinv(&self.state.n).ok_or(CustomError::Other(
+            "Modular inverse does not exist".to_string(),
+        ))?;
+
+        Ok((a * sinv) % &self.state.n)
     }
 }
 
-#[test]
-fn deserialize() -> Result<(), CustomError> {
-    let attacker = Attacker::new(TEST_URL)?;
-    println!("Public key: {:?}", attacker.rsa_pubkey);
+#[derive(Debug)]
+pub struct AttackState {
+    pub k: usize,
+    pub n: BigUint,
+    pub B: BigUint,
+    pub c: BigUint,
+    pub M: Vec<(BigUint, BigUint)>,
+    pub e: BigUint,
+    pub it: u32,
+}
 
-    let res = attacker.encrypt("ciccio".as_bytes(), None)?;
+impl AttackState {
+    pub fn new(rsa_pubkey: PublicKeyInfo, c: &[u8]) -> Self {
+        let k = rsa_pubkey.public_key_size_bits / 8;
+        let n = BigUint::from_bytes_be(rsa_pubkey.public_modulus_hex.as_bytes());
+        let e = BigUint::from(rsa_pubkey.public_exponent_dec);
 
-    println!("{:?}", res);
+        // B = 2^(8*(k-2))
+        let B = &*ONE << (8 * (k - 2));
+        let c = BigUint::from_bytes_be(c);
 
+        // Initial interval: [2B, 3B - 1]
+        let M = vec![(&*TWO * &B, &*THREE * &B - &*ONE)];
 
-    Ok(())
+        Self {
+            k,
+            n,
+            B,
+            c,
+            M,
+            e,
+            it: 1u32,
+        }
+    }
 }
