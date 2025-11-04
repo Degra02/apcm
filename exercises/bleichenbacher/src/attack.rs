@@ -90,24 +90,28 @@ impl Attacker {
             ));
         }
 
-        let mut s = self.step2a()?;
-
         let mut it = 1u64;
+        let mut s_prev = BigUint::one();
         loop {
+            let mut si = if it == 1 {
+                div_ceil(&self.state.n, &(&BigUint::from(3u8) * &self.state.B))
+            } else {
+                &s_prev + BigUint::one()
+            };
+
             println!(
                 "Iteration {}, si = {}, M.len(): {}",
                 it,
-                s,
+                si,
                 self.state.M.len()
             );
-            it += 1;
 
-            if self.state.M.len() >= 2 {
-                s = self.step2b(&s)?;
+            if it == 1 || self.state.M.len() >= 2 {
+                si = self.step2a()?;
             } else if self.state.M.len() == 1 {
                 if self.state.M[0].0 == self.state.M[0].1 {
                     // only one interval left with a == b
-                    return self.step4(&s).map(|m| {
+                    return self.step4(&si).map(|m| {
                         let mut m_bytes = m.to_bytes_be();
 
                         while m_bytes.len() < self.state.k {
@@ -116,45 +120,34 @@ impl Attacker {
                         m_bytes
                     });
                 } else {
-                    s = self.step2c(&s)?;
+                    si = self.step2c(&s_prev)?;
                 }
             } else {
                 return Err(CustomError::Other("No intervals left in M".to_string()));
             }
 
-            println!("Found si = {}", s);
+            println!("Found si = {}", si);
 
             self.state.combine_intervals();
-            self.step3(&s);
+            self.step3(&si);
+
+            s_prev = si;
+            it += 1;
         }
     }
 
+    // also steb2b
     fn step2a(&mut self) -> Result<BigUint, CustomError> {
         let mut s = div_ceil(&self.state.n, &(&BigUint::from(3u8) * &self.state.B));
+        let mut se = s.modpow(&self.state.e, &self.state.n);
 
-        loop {
-            let c_prime = (&self.state.c * s.modpow(&self.state.e, &self.state.n)) % &self.state.n;
-            let c_prime_bytes = to_k_bytes_be(&c_prime, self.state.k);
+        while !self.is_pkcs1_compliant(&(&(&self.state.c * se) % &self.state.n))? {
             println!("Testing si = {}", s);
-            if self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
-                return Ok(s);
-            }
             s += BigUint::one();
+            se = s.modpow(&self.state.e, &self.state.n);
         }
-    }
 
-    fn step2b(&mut self, prev_s: &BigUint) -> Result<BigUint, CustomError> {
-        let mut si = prev_s + BigUint::one();
-        loop {
-            let c_prime = (&self.state.c * si.modpow(&self.state.e, &self.state.n)) % &self.state.n;
-            let c_prime_bytes = to_k_bytes_be(&c_prime, self.state.k);
-            println!("Testing si = {}", si);
-
-            if self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
-                return Ok(si);
-            }
-            si += BigUint::one();
-        }
+        Ok(s)
     }
 
     fn step2c(&mut self, prev_s: &BigUint) -> Result<BigUint, CustomError> {
@@ -227,6 +220,12 @@ impl Attacker {
         ))?;
 
         Ok((a * sinv) % &self.state.n)
+    }
+
+    fn is_pkcs1_compliant(&self, cipher: &BigUint) -> Result<bool, CustomError> {
+        let cipher_bytes = to_k_bytes_be(cipher, self.state.k);
+        let res = self.decrypt(&cipher_bytes, None)?;
+        Ok(res.is_valid_pkcs1())
     }
 }
 
