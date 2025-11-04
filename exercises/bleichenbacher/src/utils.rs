@@ -58,3 +58,58 @@ pub struct PublicKeyInfo {
     #[serde(deserialize_with = "string_to_u32")]
     pub public_exponent_dec: u32,
 }
+
+
+#[test]
+fn deserialize_decrypt_res() {
+    let json_valid = r#"
+    {
+        "time_ns": "123456"
+    }
+    "#;
+
+    let res_valid: DecryptRes = serde_json::from_str(json_valid).unwrap();
+    assert!(res_valid.is_valid_pkcs1());
+    assert_eq!(res_valid.time_ns, 123456);
+
+    let json_invalid = r#"
+    {
+        "error": "Invalid padding",
+        "time_ns": "654321"
+    }
+    "#;
+
+    let res_invalid: DecryptRes = serde_json::from_str(json_invalid).unwrap();
+    assert!(!res_invalid.is_valid_pkcs1());
+    assert_eq!(res_invalid.time_ns, 654321);
+}
+
+#[test]
+fn deserialize_encrypt_res() {
+    let json = r#"
+    {
+        "cipher_hex": "abcdef123456",
+        "time_ns": "789012"
+    }
+    "#;
+
+    let res: EncryptRes = serde_json::from_str(json).unwrap();
+    assert_eq!(res.cipher_hex, "abcdef123456");
+    assert_eq!(res.time_ns, 789012);
+}
+
+#[test]
+fn deserialize_public_key_info() {
+    let json = r#"
+    {
+        "public_modulus_hex": "a1b2c3d4e5f6",
+        "public_key_size_bits": 1024,
+        "public_exponent_dec": "65537"
+    }
+    "#;
+
+    let pk_info: PublicKeyInfo = serde_json::from_str(json).unwrap();
+    assert_eq!(pk_info.public_modulus_hex, "a1b2c3d4e5f6");
+    assert_eq!(pk_info.public_key_size_bits, 1024);
+    assert_eq!(pk_info.public_exponent_dec, 65537);
+}

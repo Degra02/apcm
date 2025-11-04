@@ -19,17 +19,31 @@ const CIPHERTEXT: [u8; 128] = hex!("2d38aeb156ef11bc165989a12669b30cf20cda8a1962
 
 #[cfg(test)]
 mod tests {
-    use crate::{attack::Attacker, utils::CustomError, TEST_URL};
+    use crate::{attack::Attacker, utils::CustomError, CIPHERTEXT, TEST_URL, URL};
 
     #[test]
     fn solution() -> Result<(), CustomError> {
+        let mut attacker = Attacker::new(URL, Some(&CIPHERTEXT))?;
+        let res = attacker.bleichenbacher_attack()?;
+
+        println!(
+            "Decrypted plaintext: {}",
+            String::from_utf8_lossy(&res)
+        );
 
         Ok(())
     }
 
     #[test]
     fn test_attack() -> Result<(), CustomError> {
-        let attacker = Attacker::new(TEST_URL, None)?;
+        let mut attacker = Attacker::new(TEST_URL, None)?;
+        let res = attacker.bleichenbacher_attack()?;
+
+        println!(
+            "Decrypted plaintext: {}",
+            String::from_utf8_lossy(&res)
+        );
+
 
 
         Ok(())

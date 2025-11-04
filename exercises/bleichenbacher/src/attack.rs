@@ -85,16 +85,44 @@ impl Attacker {
 
     /// Step 1 can be skipped since `c` is already a valid PKCS#1 v1.5 ciphertext.
     pub fn bleichenbacher_attack(&mut self) -> Result<Vec<u8>, CustomError> {
-        let res = vec![];
+        let mut si = self.step2a()?;
 
-        Ok(res)
+        let mut it = 0u64;
+        loop {
+            println!("Iteration {}: M = {:?}, si = {}", it, self.state.M, si);
+            it += 1;
+
+            if self.state.M.len() >= 2 {
+                si = self.step2b(&si)?;
+            } else if self.state.M.len() == 1 {
+                if self.state.M[0].0 == self.state.M[0].1 {
+                    // only one interval left with a == b
+                    return self.step4(&si).map(|m| {
+                        let mut m_bytes = m.to_bytes_be();
+                        // prepend leading zeros if necessary
+                        while m_bytes.len() < self.state.k {
+                            m_bytes.insert(0, 0u8);
+                        }
+                        m_bytes
+                    });
+                } else {
+                    si = self.step2c(&si)?;
+                }
+            }
+
+            println!("Found si = {}", si);
+
+            self.step3(&si);
+        }
     }
 
     fn step2a(&mut self) -> Result<BigUint, CustomError> {
         let mut s1 = &self.state.n / (&*THREE * &self.state.B);
         loop {
             let c_prime = (&self.state.c * s1.modpow(&self.state.e, &self.state.n)) % &self.state.n;
-            if self.decrypt(&c_prime.to_bytes_be(), None)?.is_valid_pkcs1() {
+            let c_prime_bytes = to_k_bytes_be(&c_prime, self.state.k);
+            println!("Step 2a: trying s1 = {}", s1);
+            if self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
                 return Ok(s1);
             } else {
                 s1 += &*ONE;
@@ -173,6 +201,16 @@ impl Attacker {
 
         Ok((a * sinv) % &self.state.n)
     }
+
+}
+
+
+fn to_k_bytes_be(x: &BigUint, k: usize) -> Vec<u8> {
+    let mut x_bytes = x.to_bytes_be();
+    while x_bytes.len() < k {
+        x_bytes.insert(0, 0u8);
+    }
+    x_bytes
 }
 
 #[derive(Debug)]
@@ -183,14 +221,16 @@ pub struct AttackState {
     pub c: BigUint,
     pub M: Vec<(BigUint, BigUint)>,
     pub e: BigUint,
-    pub it: u32,
 }
 
 impl AttackState {
     pub fn new(rsa_pubkey: PublicKeyInfo, c: &[u8]) -> Self {
         let k = rsa_pubkey.public_key_size_bits / 8;
-        let n = BigUint::from_bytes_be(rsa_pubkey.public_modulus_hex.as_bytes());
+        let decoded = hex::decode(&rsa_pubkey.public_modulus_hex).expect("Invalid hex in modulus");
+        let n = BigUint::from_bytes_be(&decoded);
         let e = BigUint::from(rsa_pubkey.public_exponent_dec);
+
+        println!("Modulus hex: {}\nModulus n: {}", rsa_pubkey.public_modulus_hex, n);
 
         // B = 2^(8*(k-2))
         let B = &*ONE << (8 * (k - 2));
@@ -206,7 +246,6 @@ impl AttackState {
             c,
             M,
             e,
-            it: 1u32,
         }
     }
 }
