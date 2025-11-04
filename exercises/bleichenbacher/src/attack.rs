@@ -141,6 +141,7 @@ impl Attacker {
         loop {
             let c_prime = (&self.state.c * si.modpow(&self.state.e, &self.state.n)) % &self.state.n;
             let c_prime_bytes = to_k_bytes_be(&c_prime, self.state.k);
+            println!("Testing si = {}", si);
 
             if self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
                 return Ok(si);

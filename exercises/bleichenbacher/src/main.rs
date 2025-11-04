@@ -11,6 +11,7 @@ const CIPHERTEXT: [u8; 128] = hex!("2d38aeb156ef11bc165989a12669b30cf20cda8a1962
 
 fn main() -> Result<(), CustomError> {
     let mut attacker = Attacker::new(URL, Some(&CIPHERTEXT))?;
+    // let mut attacker = Attacker::new(TEST_URL, None)?;
     let res = attacker.bleichenbacher_attack()?;
     println!("{:?}", res);
 
