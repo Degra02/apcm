@@ -81,8 +81,15 @@ impl Attacker {
         Ok(res)
     }
 
-    /// Step 2a can be skipped since `c` is already a valid PKCS#1 v1.5 ciphertext.
     pub fn bleichenbacher_attack(&mut self) -> Result<Vec<u8>, CustomError> {
+        // Step 2a can be skipped since `c` is already a valid PKCS#1 v1.5 ciphertext, but check
+        // anyway
+        let c_prime_bytes = to_k_bytes_be(&self.state.c, self.state.k);
+        if !self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
+            return Err(CustomError::Other(
+                "Initial ciphertext is not PKCS#1 v1.5 compliant".to_string(),
+            ));
+        }
 
         // let mut si = self.step2a()?;
         let mut si = BigUint::one();
@@ -116,18 +123,19 @@ impl Attacker {
 
             println!("Found si = {}", si);
 
+            self.state.combine_intervals();
             self.step3(&si);
         }
     }
 
     fn step2a(&mut self) -> Result<BigUint, CustomError> {
         let b3 = BigUint::from(3u8) * &self.state.B;
-        let mut s = div_ceil(&self.state.n, &b3);
+        let mut s = &self.state.n / &b3;
 
         loop {
             let c_prime = (&self.state.c * s.modpow(&self.state.e, &self.state.n)) % &self.state.n;
             let c_prime_bytes = to_k_bytes_be(&c_prime, self.state.k);
-
+            println!("Testing si = {}", s);
             if self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
                 return Ok(s);
             }
@@ -152,36 +160,33 @@ impl Attacker {
 
     fn step2c(&mut self, prev_s: &BigUint) -> Result<BigUint, CustomError> {
         let (a, b) = &self.state.M[0];
-        let one = BigUint::from(1u8);
         let two = BigUint::from(2u8);
         let three = BigUint::from(3u8);
 
-        // let mut ri = 2u8 * (prev_s * b - 2u8 * &self.state.B) / &self.state.n;
-        // let mut ri = div_ceil(&( 2u8 * (prev_s * b - 2u8 * &self.state.B) ), &self.state.n);
-        let num = prev_s * b - &two * &self.state.B;
-        let mut ri = &two * div_ceil(&num, &self.state.n);
+        let num = clamp_sub(&( prev_s * b ), &( &two * &self.state.B ));
+        let mut r = &two * div_ceil(&num, &self.state.n);
 
         loop {
             // si = ceil((B + ri*n) / b)
-            let mut si = &(&two * &self.state.B + &ri * &self.state.n) / b;
+            let mut s = div_ceil(&(&two * &self.state.B + &r * &self.state.n), b);
             // s_end = floor((3B + ri*n) / a)
-            let s_end = &(&three * &self.state.B + &ri * &self.state.n) / a;
+            let s_end = &(&three * &self.state.B + &r * &self.state.n) / a;
 
-            println!("si: {}, s_end: {}", si, s_end);
+            println!("si: {}, s_end: {}", s, s_end);
 
-            while si < s_end {
-                println!("Testing si = {}", si);
+            while s < s_end {
+                println!("Testing si = {}", s);
                 let c_prime =
-                    (&self.state.c * si.modpow(&self.state.e, &self.state.n)) % &self.state.n;
+                    (&self.state.c * s.modpow(&self.state.e, &self.state.n)) % &self.state.n;
                 let c_prime_bytes = to_k_bytes_be(&c_prime, self.state.k);
 
                 if self.decrypt(&c_prime_bytes, None)?.is_valid_pkcs1() {
-                    return Ok(si);
+                    return Ok(s);
                 }
-                si += BigUint::one();
+                s += BigUint::one();
             }
 
-            ri += BigUint::one();
+            r += BigUint::one();
         }
     }
 
@@ -241,7 +246,11 @@ impl Attacker {
 pub fn div_ceil(num: &BigUint, den: &BigUint) -> BigUint {
     let quot = num / den;
     let rem = num % den;
-    if rem.is_zero() { quot } else { quot + BigUint::one() }
+    if rem.is_zero() {
+        quot
+    } else {
+        quot + 1u8
+    }
 }
 
 fn div_floor(num: &BigUint, den: &BigUint) -> BigUint {
@@ -317,6 +326,34 @@ impl AttackState {
 
         Self { k, n, B, c, M, e }
     }
+
+    pub fn combine_intervals(&mut self) {
+        self.M.sort();
+
+        let mut combined = vec![];
+        for interval_a in self.M.iter() {
+            let mut found = false;
+
+            for interval_b in combined.iter_mut() {
+                if overlap(interval_a, interval_b) {
+                    interval_b.0 = ((&(interval_b.0)).min(&interval_a.0)).clone();
+                    interval_b.1 = ((&(interval_b.1)).max(&interval_a.1)).clone();
+                    found = true;
+                    break;
+                }
+            }
+
+            if !found {
+                combined.push(interval_a.clone());
+            }
+        }
+
+        self.M = combined;
+    }
+}
+
+pub fn overlap(x: &Interval, y: &Interval) -> bool {
+    x.0 <= y.1 && y.0 <= x.1
 }
 
 #[test]
