@@ -1,9 +1,6 @@
-use std::str::FromStr;
 
-use crate::{attack::{unpad_pkcs1_v15, Attacker}, utils::CustomError};
+use crate::{attack::Attacker, utils::CustomError};
 use hex_literal::hex;
-use num_bigint::BigUint;
-
 mod attack;
 mod utils;
 mod bytes;
@@ -12,14 +9,15 @@ mod bytes;
 // Group: es geht um die Wurst
 // How to run:
 // ```
-// cargo run --release (will take long)
+// cargo run --release
+// (will take long)
 // ```
 //
 // The result from running the attack on the server is:
 // message: 8126909346732895552832680717220929616097849623675250195093952090503665860206128499907087726347990639484388867644184638996449734722096108887967941758581184429828980071961784161017064967105676617129392976269419021845320646612091868496432853736785840242880433388131131739944486265371184261272339189514466163
 //
-//  Which is the decimal representation of the plaintext.
-//
+//  Which is the decimal representation of the following unpadded message:
+//  `I bear the sigil of Raloberon, thus I shall pass`
 //
 
 const URL: &str = "https://medieval-adelle-jonistartuplab-17499dda.koyeb.app";
@@ -37,13 +35,7 @@ fn main() -> Result<(), CustomError> {
         res
     );
 
-    let a = "8126909346732895552832680717220929616097849623675250195093952090503665860206128499907087726347990639484388867644184638996449734722096108887967941758581184429828980071961784161017064967105676617129392976269419021845320646612091868496432853736785840242880433388131131739944486265371184261272339189514466163";
-
-    let res = BigUint::from_str(a).unwrap();
-
-    let k = 128;
     let b = res.to_bytes_be();
-
     let separator = b.iter().position(|&x| x == 0x00).unwrap();
     let unpadded = &b[(separator + 1)..];
 
