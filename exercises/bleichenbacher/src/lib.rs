@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 mod attack;
 mod utils;
+mod bytes;
 
 use hex_literal::hex;
 
@@ -37,26 +38,12 @@ mod tests {
     #[test]
     fn test_attack() -> Result<(), CustomError> {
         let mut attacker = Attacker::new(TEST_URL, None)?;
-        let res = attacker.bleichenbacher_attack()?;
+        let res = attacker.attack()?;
 
         println!(
-            "Decrypted plaintext: {}",
-            String::from_utf8_lossy(&res)
+            "message: {}",
+            res
         );
-
-
-
-        Ok(())
-    }
-
-    #[test]
-    fn deserialize() -> Result<(), CustomError> {
-        let attacker = Attacker::new(TEST_URL, None)?;
-        println!("State: {:?}", attacker.state);
-
-        let res = attacker.encrypt("ciccio".as_bytes(), None)?;
-
-        println!("{:?}", res);
 
         Ok(())
     }

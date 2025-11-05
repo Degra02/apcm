@@ -3,6 +3,7 @@ use hex_literal::hex;
 
 mod attack;
 mod utils;
+mod bytes;
 
 const URL: &str = "https://medieval-adelle-jonistartuplab-17499dda.koyeb.app";
 const TEST_URL: &str = "http://localhost:8000";
@@ -12,23 +13,27 @@ const CIPHERTEXT: [u8; 128] = hex!("2d38aeb156ef11bc165989a12669b30cf20cda8a1962
 fn main() -> Result<(), CustomError> {
     // let mut attacker = Attacker::new(URL, Some(&CIPHERTEXT))?;
     let mut attacker = Attacker::new(TEST_URL, None)?;
-    let res = attacker.bleichenbacher_attack()?;
-    println!("{:?}", res);
+    let res = attacker.attack()?;
 
-    match unpad_pkcs1_v15(&res) {
-        Ok(plaintext) => {
-            println!("Recovered plaintext ({} bytes): {:?}", plaintext.len(), plaintext);
-            // If the original message was printable UTF-8:
-            if let Ok(s) = std::str::from_utf8(&plaintext) {
-                println!("As UTF-8: {}", s);
-            } else {
-                println!("Plaintext is not valid UTF-8; raw bytes shown above.");
-            }
-        }
-        Err(e) => {
-            eprintln!("Unpadding failed: {:?}", e);
-        }
-    }
+    println!(
+        "message: {}",
+        res
+    );
+
+    // match unpad_pkcs1_v15(&res) {
+    //     Ok(plaintext) => {
+    //         println!("Recovered plaintext ({} bytes): {:?}", plaintext.len(), plaintext);
+    //         // If the original message was printable UTF-8:
+    //         if let Ok(s) = std::str::from_utf8(&plaintext) {
+    //             println!("As UTF-8: {}", s);
+    //         } else {
+    //             println!("Plaintext is not valid UTF-8; raw bytes shown above.");
+    //         }
+    //     }
+    //     Err(e) => {
+    //         eprintln!("Unpadding failed: {:?}", e);
+    //     }
+    // }
 
     Ok(())
 }
