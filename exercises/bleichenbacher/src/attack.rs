@@ -5,7 +5,7 @@ use num_traits::{One, Zero};
 use reqwest::blocking::Client;
 use serde_json::Value;
 
-use crate::{utils::{CustomError, DecryptRes, EncryptRes, PublicKeyInfo}};
+use crate::{utils::{CustomError, DecryptRes, PublicKeyInfo}};
 
 #[derive(Debug)]
 pub struct Oracle {
@@ -22,38 +22,13 @@ impl Oracle {
         }
     }
 
-    pub fn is_compliant(&self, cipher: &BigUint, k: usize) -> Result<bool, CustomError> {
+    pub fn is_pkcs1_compliant(&self, cipher: &BigUint, k: usize) -> Result<bool, CustomError> {
         let cipher_bytes = to_k_bytes_be(cipher, k);
         let res: DecryptRes = self.client
             .get(format!("{}/decrypt?c={}", self.url, hex::encode(&cipher_bytes)))
             .send()?
             .json()?;
-        Ok(res.is_valid_pkcs1())
-    }
-
-    pub fn encrypt(&self, plain: &[u8], repeat: Option<u32>) -> Result<EncryptRes, CustomError> {
-        let plain_hex = hex::encode(plain);
-
-        let mut full_url = format!("{}/encrypt?p={}", self.url, plain_hex);
-
-        if let Some(r) = repeat {
-            full_url.push_str(&format!("&r={}", r));
-        }
-
-        let res: EncryptRes = self.client.get(full_url).send()?.json()?;
-        Ok(res)
-    }
-
-    pub fn decrypt(&self, cipher: &[u8], repeat: Option<u32>) -> Result<DecryptRes, CustomError> {
-        let cipher_hex = hex::encode(cipher);
-        let mut full_url = format!("{}/decrypt?c={}", self.url, cipher_hex);
-
-        if let Some(r) = repeat {
-            full_url.push_str(&format!("&r={}", r));
-        }
-
-        let res: DecryptRes = self.client.get(full_url).send()?.json()?;
-        Ok(res)
+        Ok(res.is_valid())
     }
 }
 
@@ -73,7 +48,7 @@ impl Attacker {
 
         let rsa_pubkey: PublicKeyInfo = serde_json::from_value(public_json.clone())?;
 
-        let state = AttackState::new(rsa_pubkey, &cipher);
+        let state = AttackState::new(rsa_pubkey, cipher);
         let oracle = Oracle::new(url);
 
         Ok(Self {
@@ -86,7 +61,7 @@ impl Attacker {
     pub fn attack(&mut self) -> Result<BigUint, CustomError> {
         // Step 1 can be skipped since `c` is already a valid PKCS#1 v1.5 ciphertext, but check
         // anyway
-        if !self.oracle.is_compliant(&self.state.c, self.state.k)? {
+        if !self.oracle.is_pkcs1_compliant(&self.state.c, self.state.k)? {
             return Err(CustomError::Other(
                 "Initial ciphertext is not PKCS#1 v1.5 compliant".to_string(),
             ));
@@ -116,7 +91,7 @@ impl Attacker {
 
             if self.state.it == 1 || self.state.M.len() >= 2 {
                 let mut se = s_i.modpow(&e, &n);
-                while !self.oracle.is_compliant(&((&c * &se) % &n), k)? {
+                while !self.oracle.is_pkcs1_compliant(&((&c * &se) % &n), k)? {
                     println!("step2a: s_i = {}", s_i);
                     s_i += 1u8;
                     se = s_i.modpow(&e, &n);
@@ -130,7 +105,7 @@ impl Attacker {
 
                 let mut se = s_i.modpow(&e, &n);
 
-                while !self.oracle.is_compliant(&((&c * &se) % &n), k)? {
+                while !self.oracle.is_pkcs1_compliant(&((&c * &se) % &n), k)? {
                     println!("step2c: s_i = {}", s_i);
                     if s_i > div_ceil(&(&three_B + &r_i * &n), a) {
                         r_i += 1u8;
@@ -204,18 +179,6 @@ pub fn div_ceil(num: &BigUint, den: &BigUint) -> BigUint {
         quot
     } else {
         quot + 1u8
-    }
-}
-
-fn div_floor(num: &BigUint, den: &BigUint) -> BigUint {
-    num / den
-}
-
-fn clamp_sub(a: &BigUint, b: &BigUint) -> BigUint {
-    if a > b {
-        a - b
-    } else {
-        BigUint::zero()
     }
 }
 

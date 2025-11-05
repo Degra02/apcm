@@ -54,7 +54,7 @@ pub struct DecryptRes {
 }
 
 impl DecryptRes {
-    pub fn is_valid_pkcs1(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         self.error.is_none()
     }
 }
@@ -77,7 +77,7 @@ fn deserialize_decrypt_res() {
     "#;
 
     let res_valid: DecryptRes = serde_json::from_str(json_valid).unwrap();
-    assert!(res_valid.is_valid_pkcs1());
+    assert!(res_valid.is_valid());
     assert_eq!(res_valid.time_ns, 123456);
 
     let json_invalid = r#"
@@ -88,7 +88,7 @@ fn deserialize_decrypt_res() {
     "#;
 
     let res_invalid: DecryptRes = serde_json::from_str(json_invalid).unwrap();
-    assert!(!res_invalid.is_valid_pkcs1());
+    assert!(!res_invalid.is_valid());
     assert_eq!(res_invalid.time_ns, 654321);
 }
 
