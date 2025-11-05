@@ -361,7 +361,6 @@ impl Attacker {
         }
 
         let (m, _) = &self.state.M[0]; // only one interval left
-        println!("Found m: {}", m);
 
         Ok(m.clone())
     }

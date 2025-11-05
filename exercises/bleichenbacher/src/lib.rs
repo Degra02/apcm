@@ -5,14 +5,6 @@ mod bytes;
 
 use hex_literal::hex;
 
-// Author: Filippo De Grandi
-// Group: es geht um die Wurst
-// How to run:
-// ```
-// cargo test solution -- --nocapture
-// ```
-
-
 const URL: &str = "https://medieval-adelle-jonistartuplab-17499dda.koyeb.app";
 const TEST_URL: &str = "http://localhost:8000";
 
