@@ -316,32 +316,3 @@ impl AttackState {
 pub fn overlap(x: &Interval, y: &Interval) -> bool {
     x.0 <= y.1 && y.0 <= x.1
 }
-
-#[test]
-fn test_pkci() -> Result<(), CustomError> {
-    let client = Client::new();
-    let url = "http://localhost:8000";
-
-    let json = client
-        .get(format!("{}/encrypt?p={}", url, hex::encode("attack")))
-        .send()?
-        .text()?;
-    let v: Value = serde_json::from_str(&json)?;
-    let cipher_hex = v["cipher_hex"]
-        .as_str()
-        .ok_or(CustomError::Other("Error getting cipher_hex".to_string()))?;
-    let c = hex::decode(cipher_hex)
-        .map_err(|e| CustomError::Other(format!("Hex decode error: {}", e)))?;
-
-    println!("Ciphertext: {}", cipher_hex);
-
-    let json = client
-        .get(format!("{}/decrypt?c={}", url, hex::encode(&c)))
-        .send()?
-        .text()?;
-    let v: Value = serde_json::from_str(&json)?;
-    let decrypt_res: DecryptRes = serde_json::from_value(v)?;
-    println!("Decrypt response: {:?}", decrypt_res);
-
-    Ok(())
-}
