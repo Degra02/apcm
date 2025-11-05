@@ -65,7 +65,7 @@ pub struct Attacker {
 }
 
 impl Attacker {
-    pub fn new(url: &str, cipher: Option<&[u8]>) -> Result<Self, CustomError> {
+    pub fn new(url: &str, cipher: &[u8]) -> Result<Self, CustomError> {
         let client = Client::new();
         let json = client.get(url.to_string()).send()?.text()?;
         let v: Value = serde_json::from_str(&json)?;
@@ -73,23 +73,7 @@ impl Attacker {
 
         let rsa_pubkey: PublicKeyInfo = serde_json::from_value(public_json.clone())?;
 
-        let mut c = vec![];
-        if let Some(cipher_bytes) = cipher {
-            c.extend_from_slice(cipher_bytes);
-        } else {
-            let json = client
-                .get(format!("{}/encrypt?p={}", url, hex::encode("attack")))
-                .send()?
-                .text()?;
-            let v: Value = serde_json::from_str(&json)?;
-            let cipher_hex = v["cipher_hex"]
-                .as_str()
-                .ok_or(CustomError::Other("Error getting cipher_hex".to_string()))?;
-            c = hex::decode(cipher_hex)
-                .map_err(|e| CustomError::Other(format!("Hex decode error: {}", e)))?;
-        }
-
-        let state = AttackState::new(rsa_pubkey, &c);
+        let state = AttackState::new(rsa_pubkey, &cipher);
         let oracle = Oracle::new(url);
 
         Ok(Self {
@@ -109,15 +93,15 @@ impl Attacker {
         }
 
         // easier access to state variables
-        let n = &self.state.n;
-        let e = &self.state.e;
-        let B = &self.state.B;
+        let n = self.state.n.clone();
+        let e = self.state.e.clone();
+        let B = self.state.B.clone();
         let k = self.state.k;
 
-        let c = &self.state.c;
+        let c = self.state.c.clone();
 
-        let two_B = 2u8 * B;
-        let three_B = 3u8 * B;
+        let two_B = 2u8 * &B;
+        let three_B = 3u8 * &B;
 
         let mut m_found = false;
         let mut prev_s = BigUint::one();
@@ -125,36 +109,36 @@ impl Attacker {
 
         while !m_found {
             let mut s_i = if self.state.it == 1 {
-                div_ceil(n, &three_B)
+                div_ceil(&n, &three_B)
             } else {
                 &prev_s + BigUint::one()
             };
 
             if self.state.it == 1 || self.state.M.len() >= 2 {
-                let mut se = s_i.modpow(e, n);
-                while !self.oracle.is_compliant(&((c * &se) % n), k)? {
+                let mut se = s_i.modpow(&e, &n);
+                while !self.oracle.is_compliant(&((&c * &se) % &n), k)? {
                     println!("step2a: s_i = {}", s_i);
                     s_i += 1u8;
-                    se = s_i.modpow(e, n);
+                    se = s_i.modpow(&e, &n);
                 }
             } else { // just one interval in M
                 // step 2c
                 let (a, b) = &self.state.M[0];
 
-                let mut r_i = div_ceil(&(2u8 * (b * &prev_s - &two_B)), n);
-                s_i = div_ceil(&(&two_B + &r_i * n), b);
+                let mut r_i = div_ceil(&(2u8 * (b * &prev_s - &two_B)), &n);
+                s_i = div_ceil(&(&two_B + &r_i * &n), b);
 
-                let mut se = s_i.modpow(e, n);
+                let mut se = s_i.modpow(&e, &n);
 
-                while !self.oracle.is_compliant(&((c * &se) % n), k)? {
+                while !self.oracle.is_compliant(&((&c * &se) % &n), k)? {
                     println!("step2c: s_i = {}", s_i);
-                    if s_i > div_ceil(&(&three_B + &r_i * n), a) {
+                    if s_i > div_ceil(&(&three_B + &r_i * &n), a) {
                         r_i += 1u8;
-                        s_i = div_ceil(&(&two_B + &r_i * n), b);
+                        s_i = div_ceil(&(&two_B + &r_i * &n), b);
                     } else {
                         s_i += 1u8;
                     }
-                    se = s_i.modpow(e, n);
+                    se = s_i.modpow(&e, &n);
                 }
             }
 
@@ -162,19 +146,19 @@ impl Attacker {
             // step 3
             let mut new_M = Vec::<Interval>::new();
             for (a, b) in &self.state.M {
-                let r_lower = div_ceil(&(a * &s_i - &three_B + 1u8), n);
-                let r_upper = (b * &s_i - &two_B) / n;
+                let r_lower = div_ceil(&(a * &s_i - &three_B + 1u8), &n);
+                let r_upper = (b * &s_i - &two_B) / &n;
 
                 let mut r = r_lower.clone();
                 while r <= r_upper {
                     let lower_bound = std::cmp::max(
                         a.clone(),
-                        div_ceil(&(&two_B + &r * n), &s_i),
+                        div_ceil(&(&two_B + &r * &n), &s_i),
                     );
 
                     let upper_bound = std::cmp::min(
                         b.clone(),
-                        &(&three_B - 1u8 + &r * n) / &s_i,
+                        &(&three_B - 1u8 + &r * &n) / &s_i,
                     );
 
                     let interval = (lower_bound, upper_bound);
@@ -187,29 +171,11 @@ impl Attacker {
                 }
             }
 
-            new_M.sort();
-            let mut combined = Vec::<Interval>::new();
 
-            for interval_a in new_M.iter() {
-                let mut found = false;
-
-                for interval_b in combined.iter_mut() {
-                    if overlap(interval_a, interval_b) {
-                        interval_b.0 = ((&(interval_b.0)).min(&interval_a.0)).clone();
-                        interval_b.1 = ((&(interval_b.1)).max(&interval_a.1)).clone();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if !found {
-                    combined.push(interval_a.clone());
-                }
-            }
+            self.state.combine_intervals();
 
             // loop operations
             prev_s = s_i;
-            self.state.M = combined;
             self.state.it += 1;
 
             if self.state.M.len() == 1 && self.state.M[0].0 == self.state.M[0].1 {
