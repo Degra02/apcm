@@ -1,9 +1,9 @@
+#![allow(dead_code)]
 
 use crate::{attack::Attacker, utils::CustomError};
 use hex_literal::hex;
 mod attack;
 mod utils;
-mod bytes;
 
 // Author: Filippo De Grandi
 // Group: es geht um die Wurst
@@ -30,10 +30,7 @@ fn main() -> Result<(), CustomError> {
     let mut attacker = Attacker::new(URL, Some(&CIPHERTEXT))?;
     let res = attacker.attack()?;
 
-    println!(
-        "message decimal: {}",
-        res
-    );
+    println!("message decimal: {}", res);
 
     let b = res.to_bytes_be();
     let separator = b.iter().position(|&x| x == 0x00).unwrap();
