@@ -18,7 +18,7 @@ mod utils;
 //  `I bear the sigil of Raloberon, thus I shall pass`
 //
 // NOTE:
-// The attack took around 2 hours to complete / 350k requests to the server (circa).
+// The attack took around 2-3 hours to complete / 350k requests to the server (circa).
 // Strangely, the local connection (through Docker) was slower that the remote one.
 //
 // I used an error based oracle, altough I believe also the timing oracle would have worked fine.
@@ -26,6 +26,11 @@ mod utils;
 //
 // The `unpad_result` test can be used to verify the unpadding of the final result
 // via `cargo test`
+//
+// NOTE++:
+// This version is a parallelized version of the attack.
+// The correct result has been obtained with the single threaded version, further tests have to
+// be done to verify the correctness of this parallelized version.
 
 const URL: &str = "https://medieval-adelle-jonistartuplab-17499dda.koyeb.app";
 const CIPHERTEXT: [u8; 128] = hex!("2d38aeb156ef11bc165989a12669b30cf20cda8a196288a2a24262c9b43bd715ba76dbd8c42337d4ec0d7d40a77fe4a5f37a5a59e0e5e5506abb588225d5f3483f4f4bde4e3771cec55f12c0dcca56f5d9a3110bc50dc47d7d04db8e4e57044574ca101301c1efc64a497af420b286fe6baf3a4adc883a2ed24956c8eb502817");

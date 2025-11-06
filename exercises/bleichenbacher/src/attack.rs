@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(dead_code)]
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use num_bigint::BigUint;
@@ -73,18 +74,21 @@ impl Attacker {
         e: &BigUint,
         n: &BigUint,
         k: usize,
-        mut start: BigUint,
-        batch_size: usize,
+        oracle: &Oracle,
+        mut s_start: BigUint,
+        s_upper: Option<&BigUint>,
+        mp: Arc<MultiProgress>,
     ) -> Result<BigUint, CustomError> {
         let num_workers = rayon::current_num_threads();
 
-        let mp = MultiProgress::new();
         let mut bars_vec = Vec::with_capacity(num_workers);
+
+        const UPDATE: u64 = 20;
 
         for i in 0..num_workers {
             let pb = mp.add(ProgressBar::new_spinner());
             let style =
-                ProgressStyle::with_template("{spinner:.green} worker {prefix}: {msg}").unwrap();
+                ProgressStyle::with_template("{spinner:.green} {prefix}: {msg}").unwrap();
             pb.set_style(style);
             pb.set_prefix(format!("{}", i));
             pb.enable_steady_tick(Duration::from_millis(100));
@@ -96,34 +100,25 @@ impl Attacker {
         let probe_counters: Vec<AtomicU64> = (0..num_workers).map(|_| AtomicU64::new(0)).collect();
         let probe_counters = Arc::new(probe_counters);
 
-        const UPDATE: u64 = 50;
-
-        let client = Arc::new(self.oracle.client.clone());
-        let url = Arc::new(self.oracle.url.clone());
+        let oracle = Arc::new(oracle);
 
         let probe = |cprime: BigUint| -> bool {
-            let cipher_bytes = to_k_bytes_be(&cprime, k);
-            match client
-                .get(format!("{}/decrypt?c={}", url, hex::encode(&cipher_bytes)))
-                .send()
-            {
-                Ok(resp) => match resp.json::<DecryptRes>() {
-                    Ok(decrypt_res) => decrypt_res.is_valid(),
-                    Err(e) => {
-                        eprintln!("Error parsing JSON response: {}", e);
-                        false
-                    }
-                },
-                Err(e) => {
-                    eprintln!("HTTP request error: {}", e);
-                    false
-                }
-            }
+            oracle.is_pkcs1_compliant(&cprime, k).unwrap_or_else(|e| {
+                eprintln!("Oracle error: {:?}", e);
+                false
+            })
         };
 
-        loop {
-            let candidates: Vec<BigUint> = (0..batch_size)
-                .map(|i| &start + BigUint::from(i as u32))
+        while s_upper.is_none() || &s_start <= s_upper.unwrap() {
+            let candidates: Vec<BigUint> = (0..BATCH_SIZE)
+                .map(|i| &s_start + BigUint::from(i as u32))
+                .filter(|s_candidate| {
+                    if let Some(s_upper) = s_upper {
+                        s_candidate <= s_upper
+                    } else {
+                        true
+                    }
+                })
                 .collect();
 
             let successes: Vec<BigUint> = candidates
@@ -138,15 +133,10 @@ impl Attacker {
 
                     let prev = counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                     if prev.is_multiple_of(UPDATE) {
-                        pb.set_message(format!("testing s={} | probes={}", s_candidate, prev + 1));
+                        pb.set_message(format!("s={} | probes={}", s_candidate, prev + 1));
                     }
 
                     if probe(cprime) {
-                        pb.set_message(format!(
-                            "found s={} after probes={}",
-                            s_candidate,
-                            prev + 1
-                        ));
                         Some(s_candidate.clone())
                     } else {
                         None
@@ -164,8 +154,12 @@ impl Attacker {
                 return Ok(min_s);
             }
 
-            start += BigUint::from(batch_size as u32);
+            s_start += BigUint::from(BATCH_SIZE as u32);
         }
+
+        Err(CustomError::Other(
+            "No valid s found in the given range".to_string(),
+        ))
     }
 
     pub fn attack(&mut self) -> Result<BigUint, CustomError> {
@@ -180,7 +174,15 @@ impl Attacker {
             ));
         }
 
-        let pb = self.progress_bar();
+        let mp = Arc::new(MultiProgress::new());
+        let main_pb = mp.add(ProgressBar::new_spinner());
+        main_pb.set_style(
+            ProgressStyle::with_template("[{elapsed_precise}] {msg} {spinner}")
+                .unwrap()
+                .tick_chars("'°º¤ø,¸¸,ø¤º°'"),
+        );
+        main_pb.enable_steady_tick(Duration::from_millis(100));
+        main_pb.set_message("Es geht um die Wurst".to_string());
 
         // easier access to state variables
         let n = self.state.n.clone();
@@ -195,8 +197,6 @@ impl Attacker {
 
         let mut prev_s = BigUint::one();
 
-        let mut oracle_queries = 0u64;
-
         let mut m_found = false;
         while !m_found {
             let mut s_i = if self.state.it == 1 {
@@ -207,40 +207,62 @@ impl Attacker {
 
             if self.state.it == 1 || self.state.M.len() >= 2 {
                 // parallel step2a / 2b
-                s_i = self.find_s_parallel(&c, &e, &n, k, s_i.clone(), BATCH_SIZE)?;
+                main_pb.set_message(if self.state.it == 1 {
+                    "step 2a".to_string()
+                } else {
+                    "step 2b".to_string()
+                });
+
+                s_i = self.find_s_parallel(
+                    &c,
+                    &e,
+                    &n,
+                    k,
+                    &self.oracle,
+                    s_i.clone(),
+                    None,
+                    mp.clone(),
+                )?;
             } else {
                 // just one interval in M
                 // step 2c
+                main_pb.set_message("step 2c".to_string());
+
                 let (a, b) = &self.state.M[0];
 
                 let mut r_i = ceiling_div(&(2u8 * (b * &prev_s - &B2)), &n);
-                s_i = ceiling_div(&(&B2 + &r_i * &n), b);
+                let mut s_upper = ceiling_div(&(&B3 + &r_i * &n), a);
 
-                let mut se = s_i.modpow(&e, &n);
-
-                while !self.oracle.is_pkcs1_compliant(&((&c * &se) % &n), k)? {
-                    oracle_queries += 1;
-
-                    pb.set_message(format!(
-                        "iter={} | intervals={} | s={} | step={} | oracle_queries={}",
-                        self.state.it,
-                        self.state.M.len(),
-                        s_i,
-                        "2c",
-                        oracle_queries
+                while match self.find_s_parallel(
+                    &c,
+                    &e,
+                    &n,
+                    k,
+                    &self.oracle,
+                    s_i.clone(),
+                    Some(&s_upper),
+                    mp.clone(),
+                ) {
+                    Ok(found_s) => {
+                        s_i = found_s;
+                        false
+                    }
+                    Err(_) => true,
+                } {
+                    main_pb.set_message(format!(
+                        "step 2c | iter={} | s={} | r={}",
+                        self.state.it, s_i, r_i,
                     ));
 
-                    if s_i > ceiling_div(&(&B3 + &r_i * &n), a) {
-                        r_i += 1u8;
-                        s_i = ceiling_div(&(&B2 + &r_i * &n), b);
-                    } else {
-                        s_i += 1u8;
-                    }
-                    se = s_i.modpow(&e, &n);
+                    r_i += 1u8;
+                    s_i = ceiling_div(&(&B2 + &r_i * &n), b);
+                    s_upper = ceiling_div(&(&B3 + &r_i * &n), a);
                 }
             }
 
             // step 3
+            main_pb.set_message("step 3".to_string());
+
             let mut new_M = Vec::<Interval>::new();
             for (a, b) in &self.state.M {
                 let mut r = ceiling_div(&(a * &s_i - &B3 + 1u8), &n);
@@ -248,18 +270,7 @@ impl Attacker {
 
                 while r <= r_upper {
                     let lower_bound = std::cmp::max(a.clone(), ceiling_div(&(&B2 + &r * &n), &s_i));
-
                     let upper_bound = std::cmp::min(b.clone(), &(&B3 - 1u8 + &r * &n) / &s_i);
-
-                    pb.set_message(format!(
-                        "iter={} | intervals={} | s={} | r={} | step={} | oracle_queries={}",
-                        self.state.it,
-                        self.state.M.len(),
-                        s_i,
-                        r,
-                        "3",
-                        oracle_queries
-                    ));
 
                     let interval = (lower_bound, upper_bound);
 
@@ -283,24 +294,14 @@ impl Attacker {
             }
         }
 
-        pb.finish_with_message(format!(
-            "done: iterations={} oracle_queries={}",
-            self.state.it, oracle_queries
+        main_pb.finish_with_message(format!(
+            "Es geht um die Wurst: iterations={}",
+            self.state.it
         ));
 
         let (m, _) = &self.state.M[0]; // only one interval left
 
         Ok(m.clone())
-    }
-
-    fn progress_bar(&self) -> ProgressBar {
-        let pb = ProgressBar::new_spinner();
-        pb.set_style(
-            ProgressStyle::with_template("[{elapsed_precise}] {spinner:.green} {msg}").unwrap(),
-        );
-        pb.enable_steady_tick(Duration::from_millis(100));
-        pb.set_message("starting attack...".to_string());
-        pb
     }
 }
 
