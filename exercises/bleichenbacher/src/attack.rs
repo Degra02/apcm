@@ -14,7 +14,7 @@ use std::{
 
 use crate::utils::{CustomError, DecryptRes, PublicKeyInfo};
 
-const BATCH_SIZE: usize = 1000;
+const BATCH_SIZE: usize = 256;
 
 #[derive(Debug)]
 pub struct Oracle {
