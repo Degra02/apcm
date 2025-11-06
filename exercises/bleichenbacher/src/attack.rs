@@ -14,7 +14,7 @@ use std::{
 
 use crate::utils::{CustomError, DecryptRes, PublicKeyInfo};
 
-const BATCH_SIZE: usize = 256;
+const BATCH_SIZE: usize = 1000;
 
 #[derive(Debug)]
 pub struct Oracle {
@@ -87,8 +87,7 @@ impl Attacker {
 
         for i in 0..num_workers {
             let pb = mp.add(ProgressBar::new_spinner());
-            let style =
-                ProgressStyle::with_template("{spinner:.green} {prefix}: {msg}").unwrap();
+            let style = ProgressStyle::with_template("{spinner:.green} {prefix}: {msg}").unwrap();
             pb.set_style(style);
             pb.set_prefix(format!("{}", i));
             pb.enable_steady_tick(Duration::from_millis(100));
@@ -226,14 +225,17 @@ impl Attacker {
             } else {
                 // just one interval in M
                 // step 2c
-                main_pb.set_message("step 2c".to_string());
-
                 let (a, b) = &self.state.M[0];
 
                 let mut r_i = ceiling_div(&(2u8 * (b * &prev_s - &B2)), &n);
                 let mut s_upper = ceiling_div(&(&B3 + &r_i * &n), a);
 
-                s_i = ceiling_div(&(&B2 + &r_i * &n), b); 
+                s_i = ceiling_div(&(&B2 + &r_i * &n), b);
+
+                main_pb.set_message(format!(
+                    "step 2c | iter={} | s={} | r={} | M=[{}, {}]",
+                    self.state.it, s_i, r_i, a, b
+                ));
 
                 while match self.find_s_parallel(
                     &c,
@@ -252,8 +254,8 @@ impl Attacker {
                     Err(_) => true,
                 } {
                     main_pb.set_message(format!(
-                        "step 2c | iter={} | s={} | r={}",
-                        self.state.it, s_i, r_i,
+                        "step 2c | iter={} | s={} | r={} | M=[{}, {}]",
+                        self.state.it, s_i, r_i, a, b
                     ));
 
                     r_i += 1u8;

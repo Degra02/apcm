@@ -39,11 +39,11 @@ const CIPHERTEXT: [u8; 128] = hex!("2d38aeb156ef11bc165989a12669b30cf20cda8a1962
 #[allow(dead_code)]
 const TEST_URL: &str = "http://127.0.0.1:8000";
 #[allow(dead_code)]
-const TEST_CIPHERTEXT: [u8; 128] = [0; 128]; // placeholder
+const TEST_CIPHERTEXT: [u8; 128] = hex!("6a351c8a4e160a584dc287c50f77b1589f63b45411ffdce9f25d72e99bdbaaa10970fb8a7502f63ca0c24db53cd34b3720c7c54f0d33446c9db92bb947bcf785942c4746c06e39dbb38c0536e419dff6ff1a8b032fdeb4319f68db72e3d7c52f1d2130865afb54cd76497ce9e6df0b2f4469c5f948af5740b08d87dd06922ea2");
 
 fn main() -> Result<(), CustomError> {
-    // let mut attacker = Attacker::new(TEST_URL, None)?;
-    let mut attacker = Attacker::new(URL, &CIPHERTEXT)?;
+    let mut attacker = Attacker::new(TEST_URL, &TEST_CIPHERTEXT)?;
+    // let mut attacker = Attacker::new(URL, &CIPHERTEXT)?;
     let res = attacker.attack()?;
 
     println!("message decimal: {}", res);
