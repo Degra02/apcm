@@ -21,7 +21,6 @@ impl From<serde_json::Error> for CustomError {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncryptRes {
     pub cipher_hex: String,
@@ -66,7 +65,6 @@ pub struct PublicKeyInfo {
     #[serde(deserialize_with = "string_to_u32")]
     pub public_exponent_dec: u32,
 }
-
 
 #[test]
 fn deserialize_decrypt_res() {

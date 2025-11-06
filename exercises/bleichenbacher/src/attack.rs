@@ -8,7 +8,7 @@ use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use reqwest::blocking::Client;
 use serde_json::Value;
 use std::{
-    sync::{atomic::AtomicU64, Arc},
+    sync::{Arc, atomic::AtomicU64},
     time::Duration,
 };
 
@@ -260,6 +260,7 @@ impl Attacker {
                     r += 1u8;
                 }
             }
+            self.state.M = new_M;
 
             // merge M intervals
             self.state.combine_intervals();
@@ -392,12 +393,12 @@ impl Attacker {
                     let upper_bound = std::cmp::min(b.clone(), &(&B3 - 1u8 + &r * &n) / &s_i);
 
                     main_pb.set_message(format!(
-                        "iter={} | intervals={} | s={} | r={} | step={} | oracle_queries={}",
+                        "iter={} | intervals={} | s={} | r={} | step=3 | M.len= {} | oracle_queries={}",
                         self.state.it,
                         self.state.M.len(),
                         s_i,
                         r,
-                        "3",
+                        new_M.len(),
                         oracle_probes
                     ));
 
@@ -411,11 +412,32 @@ impl Attacker {
                 }
             }
 
+            new_M.sort();
+            let mut combined = Vec::<Interval>::new();
+
+            for interval_a in new_M.iter() {
+                let mut found = false;
+
+                for interval_b in combined.iter_mut() {
+                    if overlap(interval_a, interval_b) {
+                        interval_b.0 = ((&(interval_b.0)).min(&interval_a.0)).clone();
+                        interval_b.1 = ((&(interval_b.1)).max(&interval_a.1)).clone();
+                        found = true;
+                        break;
+                    }
+                }
+
+                if !found {
+                    combined.push(interval_a.clone());
+                }
+            }
+
             // merge M intervals
-            self.state.combine_intervals();
+            // self.state.combine_intervals();
 
             // loop operations
             prev_s = s_i;
+            self.state.M = combined;
             self.state.it += 1;
 
             if self.state.M.len() == 1 && self.state.M[0].0 == self.state.M[0].1 {
@@ -459,11 +481,7 @@ pub fn to_k_bytes_be(x: &num_bigint::BigUint, k: usize) -> Vec<u8> {
 pub fn ceiling_div(num: &BigUint, den: &BigUint) -> BigUint {
     let quot = num / den;
     let rem = num % den;
-    if rem.is_zero() {
-        quot
-    } else {
-        quot + 1u8
-    }
+    if rem.is_zero() { quot } else { quot + 1u8 }
 }
 
 type Interval = (BigUint, BigUint);
@@ -509,26 +527,27 @@ impl AttackState {
         }
     }
 
-    pub fn combine_intervals(&mut self) {
-        self.M.sort();
+    fn combine_intervals(&mut self) {
+        if self.M.is_empty() || self.M.len() == 1 {
+            return;
+        }
 
-        let mut combined = Vec::<Interval>::new();
-        for interval_a in self.M.iter() {
-            let mut found = false;
+        self.M.sort_by(|a, b| a.0.cmp(&b.0));
 
-            for interval_b in combined.iter_mut() {
-                if overlap(interval_a, interval_b) {
-                    interval_b.0 = ((&(interval_b.0)).min(&interval_a.0)).clone();
-                    interval_b.1 = ((&(interval_b.1)).max(&interval_a.1)).clone();
-                    found = true;
-                    break;
+        let mut combined = Vec::<Interval>::with_capacity(self.M.len());
+        let mut current = self.M[0].clone();
+
+        for interval in self.M.iter().skip(1) {
+            if interval.0 <= &current.1 + 1u8 {
+                if interval.1 > current.1 {
+                    current.1 = interval.1.clone();
                 }
-            }
-
-            if !found {
-                combined.push(interval_a.clone());
+            } else {
+                combined.push(current);
+                current = interval.clone();
             }
         }
+        combined.push(current);
 
         self.M = combined;
     }
