@@ -67,7 +67,11 @@ impl Attacker {
 
         let pbars = Self::progress_bars();
 
-        Ok(Self { oracle, state, pbars })
+        Ok(Self {
+            oracle,
+            state,
+            pbars,
+        })
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -109,12 +113,6 @@ impl Attacker {
         };
 
         while s_upper.is_none() || &s_start < s_upper.unwrap() {
-            let batch_end = if let Some(upper) = s_upper {
-                std::cmp::min(&s_start + BigUint::from(BATCH_SIZE as u32), upper.clone())
-            } else {
-                &s_start + BigUint::from(BATCH_SIZE as u32)
-            };
-
             let candidates: Vec<BigUint> = (0..BATCH_SIZE)
                 .map(|i| &s_start + BigUint::from(i as u32))
                 .take_while(|s| s_upper.is_none() || s < s_upper.unwrap())
@@ -203,11 +201,7 @@ impl Attacker {
                     "step 2b".to_string()
                 });
 
-                s_i = self.find_s_parallel(
-                    (&c, &e, &n, k),
-                    (s_i.clone(), None),
-                    mp.clone(),
-                )?;
+                s_i = self.find_s_parallel((&c, &e, &n, k), (s_i.clone(), None), mp.clone())?;
             } else {
                 // just one interval in M
                 // step 2c
@@ -292,18 +286,16 @@ impl Attacker {
     pub fn attack_serial(&mut self) -> Result<BigUint, CustomError> {
         // Step 1 can be skipped since `c` is already a valid PKCS#1 v1.5 ciphertext, but check
         // anyway
-        if !self.oracle.is_pkcs1_compliant(&self.state.c, self.state.k)? {
+        if !self
+            .oracle
+            .is_pkcs1_compliant(&self.state.c, self.state.k)?
+        {
             return Err(CustomError::Other(
                 "Initial ciphertext is not PKCS#1 v1.5 compliant".to_string(),
             ));
         }
 
-        let pb = ProgressBar::new_spinner();
-        pb.set_style(ProgressStyle::with_template("[{elapsed_precise}] {spinner:.green} {msg}")
-            .unwrap()
-            .tick_strings(&["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]));
-        pb.enable_steady_tick(Duration::from_millis(100));
-        pb.set_message(format!("iter={} | intervals={} | step={} ", self.state.it, self.state.M.len(), "init"));
+        let (_, main_pb) = &self.pbars;
 
         // easier access to state variables
         let c = self.state.c.clone();
@@ -327,7 +319,7 @@ impl Attacker {
                 &prev_s + BigUint::one()
             };
 
-            pb.set_message(format!(
+            main_pb.set_message(format!(
                 "iter={} | intervals={} | s={} | oracle_queries={}",
                 self.state.it,
                 self.state.M.len(),
@@ -342,7 +334,7 @@ impl Attacker {
                     oracle_probes += 1;
 
                     if oracle_probes.is_multiple_of(50) {
-                        pb.set_message(format!(
+                        main_pb.set_message(format!(
                             "iter={} | intervals={} | s={} | step={} | oracle_queries={}",
                             self.state.it,
                             self.state.M.len(),
@@ -355,7 +347,8 @@ impl Attacker {
                     s_i += 1u8;
                     se = s_i.modpow(&e, &n);
                 }
-            } else { // just one interval in M
+            } else {
+                // just one interval in M
                 // step 2c
                 let (a, b) = &self.state.M[0];
 
@@ -367,7 +360,7 @@ impl Attacker {
                 while !self.oracle.is_pkcs1_compliant(&((&c * &se) % &n), k)? {
                     oracle_probes += 1;
 
-                    pb.set_message(format!(
+                    main_pb.set_message(format!(
                         "iter={} | intervals={} | s={} | step={} | oracle_queries={}",
                         self.state.it,
                         self.state.M.len(),
@@ -386,7 +379,6 @@ impl Attacker {
                 }
             }
 
-
             // step 3
             let mut new_M = Vec::<Interval>::new();
             for (a, b) in &self.state.M {
@@ -395,17 +387,11 @@ impl Attacker {
 
                 let mut r = r_lower.clone();
                 while r <= r_upper {
-                    let lower_bound = std::cmp::max(
-                        a.clone(),
-                        ceiling_div(&(&B2 + &r * &n), &s_i),
-                    );
+                    let lower_bound = std::cmp::max(a.clone(), ceiling_div(&(&B2 + &r * &n), &s_i));
 
-                    let upper_bound = std::cmp::min(
-                        b.clone(),
-                        &(&B3 - 1u8 + &r * &n) / &s_i,
-                    );
+                    let upper_bound = std::cmp::min(b.clone(), &(&B3 - 1u8 + &r * &n) / &s_i);
 
-                    pb.set_message(format!(
+                    main_pb.set_message(format!(
                         "iter={} | intervals={} | s={} | r={} | step={} | oracle_queries={}",
                         self.state.it,
                         self.state.M.len(),
@@ -437,7 +423,7 @@ impl Attacker {
             }
         }
 
-        pb.finish_with_message(format!(
+        main_pb.finish_with_message(format!(
             "done: iterations={} oracle_queries={}",
             self.state.it, oracle_probes
         ));
