@@ -289,6 +289,164 @@ impl Attacker {
         Ok(m.clone())
     }
 
+    pub fn attack_serial(&mut self) -> Result<BigUint, CustomError> {
+        // Step 1 can be skipped since `c` is already a valid PKCS#1 v1.5 ciphertext, but check
+        // anyway
+        if !self.oracle.is_pkcs1_compliant(&self.state.c, self.state.k)? {
+            return Err(CustomError::Other(
+                "Initial ciphertext is not PKCS#1 v1.5 compliant".to_string(),
+            ));
+        }
+
+        let pb = ProgressBar::new_spinner();
+        pb.set_style(ProgressStyle::with_template("[{elapsed_precise}] {spinner:.green} {msg}")
+            .unwrap()
+            .tick_strings(&["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]));
+        pb.enable_steady_tick(Duration::from_millis(100));
+        pb.set_message(format!("iter={} | intervals={} | step={} ", self.state.it, self.state.M.len(), "init"));
+
+        // easier access to state variables
+        let c = self.state.c.clone();
+        let e = self.state.e.clone();
+        let n = self.state.n.clone();
+        let k = self.state.k;
+
+        let B = self.state.B.clone();
+        let B2 = 2u8 * &B;
+        let B3 = 3u8 * &B;
+
+        let mut prev_s = BigUint::one();
+
+        let mut oracle_probes = 0u64;
+
+        let mut m_recovered = false;
+        while !m_recovered {
+            let mut s_i = if self.state.it == 1 {
+                ceiling_div(&n, &B3)
+            } else {
+                &prev_s + BigUint::one()
+            };
+
+            pb.set_message(format!(
+                "iter={} | intervals={} | s={} | oracle_queries={}",
+                self.state.it,
+                self.state.M.len(),
+                s_i,
+                oracle_probes
+            ));
+
+            if self.state.it == 1 || self.state.M.len() >= 2 {
+                // step 2a / 2b based on it
+                let mut se = s_i.modpow(&e, &n);
+                while !self.oracle.is_pkcs1_compliant(&((&c * &se) % &n), k)? {
+                    oracle_probes += 1;
+
+                    if oracle_probes.is_multiple_of(50) {
+                        pb.set_message(format!(
+                            "iter={} | intervals={} | s={} | step={} | oracle_queries={}",
+                            self.state.it,
+                            self.state.M.len(),
+                            s_i,
+                            if self.state.it == 1 { "2a" } else { "2b" },
+                            oracle_probes
+                        ));
+                    }
+
+                    s_i += 1u8;
+                    se = s_i.modpow(&e, &n);
+                }
+            } else { // just one interval in M
+                // step 2c
+                let (a, b) = &self.state.M[0];
+
+                let mut r_i = ceiling_div(&(2u8 * (b * &prev_s - &B2)), &n);
+                s_i = ceiling_div(&(&B2 + &r_i * &n), b);
+
+                let mut se = s_i.modpow(&e, &n);
+
+                while !self.oracle.is_pkcs1_compliant(&((&c * &se) % &n), k)? {
+                    oracle_probes += 1;
+
+                    pb.set_message(format!(
+                        "iter={} | intervals={} | s={} | step={} | oracle_queries={}",
+                        self.state.it,
+                        self.state.M.len(),
+                        s_i,
+                        "2c",
+                        oracle_probes
+                    ));
+
+                    if s_i > ceiling_div(&(&B3 + &r_i * &n), a) {
+                        r_i += 1u8;
+                        s_i = ceiling_div(&(&B2 + &r_i * &n), b);
+                    } else {
+                        s_i += 1u8;
+                    }
+                    se = s_i.modpow(&e, &n);
+                }
+            }
+
+
+            // step 3
+            let mut new_M = Vec::<Interval>::new();
+            for (a, b) in &self.state.M {
+                let r_lower = ceiling_div(&(a * &s_i - &B3 + 1u8), &n);
+                let r_upper = (b * &s_i - &B2) / &n;
+
+                let mut r = r_lower.clone();
+                while r <= r_upper {
+                    let lower_bound = std::cmp::max(
+                        a.clone(),
+                        ceiling_div(&(&B2 + &r * &n), &s_i),
+                    );
+
+                    let upper_bound = std::cmp::min(
+                        b.clone(),
+                        &(&B3 - 1u8 + &r * &n) / &s_i,
+                    );
+
+                    pb.set_message(format!(
+                        "iter={} | intervals={} | s={} | r={} | step={} | oracle_queries={}",
+                        self.state.it,
+                        self.state.M.len(),
+                        s_i,
+                        r,
+                        "3",
+                        oracle_probes
+                    ));
+
+                    let interval = (lower_bound, upper_bound);
+
+                    if B2 <= interval.0 && interval.0 <= interval.1 && interval.1 < B3 {
+                        new_M.push(interval);
+                    }
+
+                    r += 1u8;
+                }
+            }
+
+            // merge M intervals
+            self.state.combine_intervals();
+
+            // loop operations
+            prev_s = s_i;
+            self.state.it += 1;
+
+            if self.state.M.len() == 1 && self.state.M[0].0 == self.state.M[0].1 {
+                m_recovered = true;
+            }
+        }
+
+        pb.finish_with_message(format!(
+            "done: iterations={} oracle_queries={}",
+            self.state.it, oracle_probes
+        ));
+
+        let (m, _) = &self.state.M[0]; // only one interval left
+
+        Ok(m.clone())
+    }
+
     fn progress_bars() -> (Arc<MultiProgress>, ProgressBar) {
         let mp = Arc::new(MultiProgress::new());
         let main_pb = mp.add(ProgressBar::new_spinner());
