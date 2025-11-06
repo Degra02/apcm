@@ -233,6 +233,8 @@ impl Attacker {
                 let mut r_i = ceiling_div(&(2u8 * (b * &prev_s - &B2)), &n);
                 let mut s_upper = ceiling_div(&(&B3 + &r_i * &n), a);
 
+                s_i = ceiling_div(&(&B2 + &r_i * &n), b); 
+
                 while match self.find_s_parallel(
                     &c,
                     &e,
