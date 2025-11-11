@@ -31,7 +31,7 @@ mod utils;
 // It took 46m58s to complete the attack against the remote server.
 //
 
-const URL: &str = "https://medieval-adelle-jonistartuplab-17499dda.koyeb.app";
+const URL: &str = "https://juicy-allyn-mystic-rogue-04c667cf.koyeb.app";
 const CIPHERTEXT: [u8; 128] = hex!(
     "2d38aeb156ef11bc165989a12669b30cf20cda8a196288a2a24262c9b43bd715ba76dbd8c42337d4ec0d7d40a77fe4a5f37a5a59e0e5e5506abb588225d5f3483f4f4bde4e3771cec55f12c0dcca56f5d9a3110bc50dc47d7d04db8e4e57044574ca101301c1efc64a497af420b286fe6baf3a4adc883a2ed24956c8eb502817"
 );
@@ -54,7 +54,7 @@ fn main() -> Result<(), CustomError> {
 #[test]
 fn test_attack() -> Result<(), CustomError> {
     const TEST_URL: &str = "http://127.0.0.1:8000";
-    const TEST_CIPHERTEXT: [u8; 128] = [0u8; 128]; // placeholder
+    const TEST_CIPHERTEXT: [u8; 128] = hex!("78d83ac28d121336b52ce282ac0ae89656ebfa3380f29f18a442ad97bf5430dac1b4b3db347aa434b3d56857ebdd59ad1040a042b2d3142646ed99908a60ab5d3602e04dab1d7f0a10c8e4c9bd45c12630d842aad01721371b6d63fbb91b3b937dca0f10de8fdb0c158f7dbe1cddbadd5fb70c03b0f1bc0631cbf5aa74e162c6"); // placeholder
 
     let mut attacker = Attacker::new(TEST_URL, &TEST_CIPHERTEXT)?;
     let res = attacker.attack()?;
