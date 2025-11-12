@@ -1,4 +1,4 @@
-use curve25519_dalek::{edwards::CompressedEdwardsY, EdwardsPoint, Scalar};
+use curve25519_dalek::{constants::ED25519_BASEPOINT_POINT, edwards::CompressedEdwardsY, EdwardsPoint, Scalar};
 use sha2::Digest;
 
 use crate::utils::CustomError;
@@ -50,13 +50,17 @@ impl SigningKey {
         hasher.update(message);
         let k_scalar = Scalar::from_hash(hasher);
 
-        // S = (r + k * s) mod L
+
         let s_scalar = r_scalar + k_scalar * self.scalar;
 
         let mut signature = [0u8; 64];
         signature[0..32].copy_from_slice(r_compressed.as_bytes());
         signature[32..64].copy_from_slice(&s_scalar.to_bytes());
         signature
+    }
+
+    pub fn verify(&self, message: &[u8], signature: &[u8; 64]) -> Result<(), CustomError> {
+        self.verifying_key.verify(message, signature)
     }
 }
 
@@ -68,12 +72,37 @@ pub struct VerifyingKey {
 
 impl VerifyingKey {
     pub(crate) fn from_scalar(scalar: &Scalar) -> Self {
-        let point = scalar * curve25519_dalek::constants::ED25519_BASEPOINT_POINT;
+        let point = scalar * ED25519_BASEPOINT_POINT;
         let compressed = point.compress();
         VerifyingKey { point, compressed }
     }
 
-    pub fn verify() -> Result<(), CustomError> {
-        Ok(())
+    pub(crate) fn verify(&self, message: &[u8], signature: &[u8; 64]) -> Result<(), CustomError> {
+        let r_bytes = &signature[..32];
+        let mut s_bytes = [0u8; 32];
+        s_bytes.copy_from_slice(&signature[32..]);
+
+        let r_point = match CompressedEdwardsY::from_slice(r_bytes)?.decompress() {
+            Some(r) => r,
+            None => return Err(CustomError::DecompressionError),
+        };
+        let s_scalar = Scalar::from_bytes_mod_order(s_bytes);
+
+        // SHA512(R || A || M)
+        let mut hasher = sha2::Sha512::new();
+        hasher.update(r_bytes);
+        hasher.update(self.compressed.as_bytes());
+        hasher.update(message);
+
+        let k_scalar = Scalar::from_hash(hasher);
+
+        // Check [S]B = R + [k]A'
+        let sb = s_scalar * ED25519_BASEPOINT_POINT;
+        let r_ka = r_point + k_scalar * self.point;
+
+        match sb == r_ka {
+            true => Ok(()),
+            false => Err(CustomError::InvalidSignature)
+        }
     }
 }
