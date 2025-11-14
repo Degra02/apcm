@@ -1,5 +1,9 @@
-use curve25519_dalek::{constants::ED25519_BASEPOINT_POINT, edwards::CompressedEdwardsY, EdwardsPoint, Scalar};
+use curve25519_dalek::{
+    constants::ED25519_BASEPOINT_POINT, edwards::CompressedEdwardsY, traits::Identity,
+    EdwardsPoint, Scalar,
+};
 use sha2::Digest;
+use strum::EnumIter;
 
 use crate::utils::CustomError;
 
@@ -50,7 +54,6 @@ impl SigningKey {
         hasher.update(message);
         let k_scalar = Scalar::from_hash(hasher);
 
-
         let s_scalar = r_scalar + k_scalar * self.scalar;
 
         let mut signature = [0u8; 64];
@@ -59,9 +62,24 @@ impl SigningKey {
         signature
     }
 
-    pub fn verify(&self, message: &[u8], signature: &[u8; 64]) -> Result<(), CustomError> {
-        self.verifying_key.verify(message, signature)
+    pub fn verify(
+        &self,
+        message: &[u8],
+        signature: &[u8; 64],
+        mode: VerifyMode,
+    ) -> Result<(), CustomError> {
+        self.verifying_key.verify(message, signature, mode)
     }
+}
+
+#[derive(Debug, EnumIter)]
+pub enum VerifyMode {
+    Ver1Strict,
+    Ver2NoSCanonicalCheck,
+    Ver3NoRCanonicalCheck,
+    Ver4NoPublicKeyCheck,
+    Ver5AllowLowOrderR,
+    Ver6Weak,
 }
 
 #[derive(Debug)]
@@ -77,22 +95,61 @@ impl VerifyingKey {
         VerifyingKey { point, compressed }
     }
 
-    pub(crate) fn verify(&self, message: &[u8], signature: &[u8; 64]) -> Result<(), CustomError> {
-        let r_bytes = &signature[..32];
+    pub(crate) fn verify(
+        &self,
+        m: &[u8],
+        sig: &[u8; 64],
+        mode: VerifyMode,
+    ) -> Result<(), CustomError> {
+        let r_bytes = &sig[..32];
         let mut s_bytes = [0u8; 32];
-        s_bytes.copy_from_slice(&signature[32..]);
+        s_bytes.copy_from_slice(&sig[32..]);
 
         let r_point = match CompressedEdwardsY::from_slice(r_bytes)?.decompress() {
             Some(r) => r,
-            None => return Err(CustomError::DecompressionError),
+            None => {
+                match mode {
+                    VerifyMode::Ver3NoRCanonicalCheck | VerifyMode::Ver6Weak => {
+                        // this is skipping decompression failure
+                        EdwardsPoint::identity()
+                    }
+                    _ => return Err(CustomError::DecompressionError),
+                }
+            }
         };
+
         let s_scalar = Scalar::from_bytes_mod_order(s_bytes);
+
+        if !matches!(
+            mode,
+            VerifyMode::Ver2NoSCanonicalCheck | VerifyMode::Ver6Weak
+        ) && Scalar::from_canonical_bytes(s_bytes).is_none().into()
+        {
+            // S is not canonical
+            return Err(CustomError::NonCanonicalS);
+        }
+
+        if !matches!(
+            mode,
+            VerifyMode::Ver4NoPublicKeyCheck | VerifyMode::Ver6Weak
+        ) && self.point.is_small_order()
+        {
+            // A' is low order
+            return Err(CustomError::InvalidPublicKey);
+        }
+
+        if !matches!(mode, VerifyMode::Ver5AllowLowOrderR | VerifyMode::Ver6Weak)
+            && r_point.is_small_order()
+        {
+            // R is low order
+            return Err(CustomError::InvalidSignature);
+        }
 
         // SHA512(R || A || M)
         let mut hasher = sha2::Sha512::new();
         hasher.update(r_bytes);
         hasher.update(self.compressed.as_bytes());
-        hasher.update(message);
+        hasher.update(m);
 
         let k_scalar = Scalar::from_hash(hasher);
 
@@ -102,7 +159,7 @@ impl VerifyingKey {
 
         match sb == r_ka {
             true => Ok(()),
-            false => Err(CustomError::InvalidSignature)
+            false => Err(CustomError::InvalidSignature),
         }
     }
 }

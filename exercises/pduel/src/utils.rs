@@ -6,6 +6,7 @@ pub enum CustomError {
     InvalidSignature,
     InvalidPublicKey,
     DecompressionError,
+    NonCanonicalS,
     Other(String)
 }
 

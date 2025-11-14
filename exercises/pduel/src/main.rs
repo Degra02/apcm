@@ -11,25 +11,62 @@ mod utils;
 // - high level abstractions for point and scalar operations
 // - well maintained and widely used in the Rust cryptographic community
 
+use curve25519_dalek::edwards::CompressedEdwardsY;
+use hex_literal::hex;
+use strum::IntoEnumIterator;
+
+use crate::eddsa::{VerifyMode, VerifyingKey};
+
 fn main() {
-    let secret_key = rand::random_iter::<u8>().take(32).collect::<Vec<u8>>();
+    let messages = vec![
+        b"" as &[u8],
+    ];
+
+    let public_keys = vec![
+        hex!("d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"),
+    ];
+
+    let signatures = vec![
+        hex!(
+            "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b"
+        ),
+    ];
+
+    println!("     | VER1 | VER2 | VER3 | VER4 | VER5 | VER6 |");
+    for (i, (msg, pk_bytes, sig)) in itertools::izip!(messages, public_keys, signatures).enumerate() {
+        let compressed = CompressedEdwardsY(pk_bytes);
+        let point = compressed
+            .decompress()
+            .expect("public key decompression failed");
+        let verifying_key = VerifyingKey { compressed, point };
+
+        print!("INP{} |", i + 1);
+        for mode in VerifyMode::iter() {
+            let result = verifying_key.verify(msg, &sig, mode);
+            print!(" {:<4} |", if result.is_ok() { "OK" } else { "FAIL" });
+        }
+        println!();
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::eddsa::SigningKey;
+    use crate::eddsa::{SigningKey, VerifyMode};
     use hex_literal::hex;
     use itertools::izip;
 
     #[test]
     fn verify() {
-        let secret_key: [u8; 32] = hex!("c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7");
+        let secret_key: [u8; 32] =
+            hex!("c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7");
         let signing_key = SigningKey::generate(&secret_key);
 
         let message = hex!("af82");
         let signature = signing_key.sign(&message);
 
-        assert!(signing_key.verify(&message, &signature).is_ok())
+        assert!(signing_key
+            .verify(&message, &signature, VerifyMode::Ver1Strict)
+            .is_ok())
     }
 
     #[test]
@@ -38,7 +75,7 @@ mod tests {
             hex!("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60"),
             hex!("4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb"),
             hex!("c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7"),
-            hex!("f5e5767cf153319517630f226876b86c8160cc583bc013744c6bf255f5cc0ee5")
+            hex!("f5e5767cf153319517630f226876b86c8160cc583bc013744c6bf255f5cc0ee5"),
         ];
 
         let messages: Vec<&[u8]> = vec![
@@ -52,7 +89,7 @@ mod tests {
             hex!("d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"),
             hex!("3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c"),
             hex!("fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025"),
-            hex!("278117fc144c72340f67d0f2316e8386ceffbf2b2428c9c51fef7c597f1d426e")
+            hex!("278117fc144c72340f67d0f2316e8386ceffbf2b2428c9c51fef7c597f1d426e"),
         ];
 
         let expected_signatures: Vec<[u8; 64]> = vec![
@@ -79,11 +116,15 @@ mod tests {
 
     #[test]
     fn sign_message() {
-        let secret_key: [u8; 32] = hex!("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60");
+        let secret_key: [u8; 32] =
+            hex!("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60");
         let signing_key = SigningKey::generate(&secret_key);
 
         let public_key = &signing_key.verifying_key;
-        println!("Public Key: {}", hex::encode(public_key.compressed.as_bytes()));
+        println!(
+            "Public Key: {}",
+            hex::encode(public_key.compressed.as_bytes())
+        );
 
         let message = b"";
         let signature = signing_key.sign(message);
