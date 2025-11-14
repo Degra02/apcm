@@ -11,30 +11,20 @@ mod utils;
 // - high level abstractions for point and scalar operations
 // - well maintained and widely used in the Rust cryptographic community
 
+use arrayref::array_ref;
 use curve25519_dalek::edwards::CompressedEdwardsY;
 use hex_literal::hex;
+use sha2::Digest;
 use strum::IntoEnumIterator;
 
-use crate::eddsa::{VerifyMode, VerifyingKey};
+use crate::eddsa::{SigningKey, VerifyMode, VerifyingKey};
 
 fn main() {
-    let messages = vec![
-        b"" as &[u8],
-    ];
-
-    let public_keys = vec![
-        hex!("d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"),
-    ];
-
-    let signatures = vec![
-        hex!(
-            "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b"
-        ),
-    ];
+    let test_inputs  = gen_test_inputs();
 
     println!("     | VER1 | VER2 | VER3 | VER4 | VER5 | VER6 |");
-    for (i, (msg, pk_bytes, sig)) in itertools::izip!(messages, public_keys, signatures).enumerate() {
-        let compressed = CompressedEdwardsY(pk_bytes);
+    for (i, (msg, pk_bytes, sig)) in test_inputs.iter().enumerate() {
+        let compressed = CompressedEdwardsY(*pk_bytes);
         let point = compressed
             .decompress()
             .expect("public key decompression failed");
@@ -42,11 +32,71 @@ fn main() {
 
         print!("INP{} |", i + 1);
         for mode in VerifyMode::iter() {
-            let result = verifying_key.verify(msg, &sig, mode);
-            print!(" {:<4} |", if result.is_ok() { "OK" } else { "FAIL" });
+            let result = verifying_key.verify(msg, sig, mode);
+            print!(" {:<4} |", if result.is_ok() { " ■" } else { " □" });
         }
         println!();
     }
+}
+
+use curve25519_dalek::{constants::ED25519_BASEPOINT_POINT, Scalar};
+
+fn gen_test_inputs() -> Vec<(&'static [u8], [u8; 32], [u8; 64])> {
+    let seed = [0u8; 32];
+    let signing_key = SigningKey::generate(&seed);
+    let msg = b"kiss & hug intruders";
+    let valid_sig = signing_key.sign(msg);
+    let valid_pk = *signing_key.verifying_key.compressed.as_bytes();
+
+    // INP1: invalid signature, all fail
+    let mut sig1 = valid_sig;
+    sig1[63] ^= 0x01;
+
+    // INP2: non-canonical S
+    let mut sig2 = valid_sig;
+    let s_bytes = &valid_sig[32..64];
+    let s_scalar = Scalar::from_bytes_mod_order(*array_ref![s_bytes, 0, 32]);
+
+    let mut non_canonical = s_scalar.to_bytes();
+    non_canonical[31] = 0xff;
+    sig2[32..64].copy_from_slice(&non_canonical);
+
+    let r_identity = CompressedEdwardsY(hex!("0100000000000000000000000000000000000000000000000000000000000000"));
+
+    let mut hasher = sha2::Sha512::new();
+    hasher.update(r_identity.as_bytes());
+    hasher.update(valid_pk);
+    hasher.update(msg);
+    let k_scalar = Scalar::from_hash(hasher);
+
+    let mut sig3 = [0u8; 64];
+    sig3[0..32].copy_from_slice(r_identity.as_bytes());
+    sig3[32..64].copy_from_slice(&k_scalar.to_bytes());
+
+    let low_order_pk = hex!("0100000000000000000000000000000000000000000000000000000000000000");
+
+    let s_arbitrary = Scalar::from(12345u64);
+    let r_point = s_arbitrary * ED25519_BASEPOINT_POINT;
+    let r_compressed = r_point.compress();
+
+    let mut sig4 = [0u8; 64];
+    sig4[0..32].copy_from_slice(r_compressed.as_bytes());
+    sig4[32..64].copy_from_slice(&s_arbitrary.to_bytes());
+
+    let mut sig5 = valid_sig;
+    sig5[0..32].copy_from_slice(&hex!("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"));
+
+    // INP6: valid
+    let sig6 = valid_sig;
+
+    vec![
+        (msg.as_ref(), valid_pk, sig1),
+        (msg.as_ref(), valid_pk, sig2),
+        (msg.as_ref(), valid_pk, sig3),
+        (msg.as_ref(), low_order_pk, sig4),
+        (msg.as_ref(), valid_pk, sig5),
+        (msg.as_ref(), valid_pk, sig6),
+    ]
 }
 
 #[cfg(test)]
