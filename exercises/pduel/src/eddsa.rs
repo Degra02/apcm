@@ -167,18 +167,18 @@ impl VerifyingKey {
 
         match mode {
             VerifyMode::Ver1Strict => {
-                // Reject non-canonical R
+                // reject non-canonical R
                 if !Self::is_canonical(&r_bytes) {
                     return Err(CustomError::InvalidSignature);
                 }
 
-                // Decode A and reject small order
+                // decode A and reject small order
                 let a_point = self.point;
                 if a_point.is_small_order() {
                     return Err(CustomError::InvalidPublicKey);
                 }
 
-                // k = H(R || A || M) using canonical R and A.Bytes()
+                // k = H(R || A || M) using canonical R and A bytes
                 let mut hasher = sha2::Sha512::new();
                 hasher.update(r_point.compress().as_bytes());
                 hasher.update(self.compressed.as_bytes());
@@ -195,12 +195,12 @@ impl VerifyingKey {
             }
 
             VerifyMode::Ver2NoSCanonicalCheck => {
-                // Reject non-canonical R only
+                // reject non-canonical R only
                 if !Self::is_canonical(&r_bytes) {
                     return Err(CustomError::InvalidSignature);
                 }
 
-                // Decode A but do not check torsion or canonicalness
+                // decode A but do not check small or canonicalness
                 let a_point = self.point;
 
                 let mut hasher = sha2::Sha512::new();
@@ -275,7 +275,7 @@ impl VerifyingKey {
             }
 
             VerifyMode::Ver5AllowLowOrderR => {
-                // VER5 rejects non-canonical A and blacklisted encodings (both canonical and non-canonical identity)
+                // VER5 rejects non-canonical A and blacklisted encodings
                 let a_bytes_arr: [u8; 32] = *self.compressed.as_bytes();
                 if !Self::is_canonical(&a_bytes_arr) {
                     return Err(CustomError::InvalidPublicKey);
@@ -285,7 +285,7 @@ impl VerifyingKey {
                     return Err(CustomError::InvalidPublicKey);
                 }
 
-                // VER5 does NOT check R's blacklist (allows INP5)
+                // VER5 does not check R's blacklist
                 let a_point = self.point;
 
                 let mut hasher = sha2::Sha512::new();
