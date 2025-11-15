@@ -6,10 +6,17 @@ mod utils;
 // Name: Filippo De Grandi
 // Group: curvy
 //
+// How to run:
+// ```
+// cargo run
+// ```
+//
 // Why the crate curve25519-dalek is used in this implementation:
-// - seamless integraiton with sha2 crate
+// - seamless integration with sha2 crate
 // - high level abstractions for point and scalar operations
 // - well maintained and widely used in the Rust cryptographic community
+// Moreover, the `Safety` description found at https://github.com/dalek-cryptography/curve25519-dalek/tree/main/curve25519-dalek#safety
+// describes the security aspects of the crate.
 
 use curve25519_dalek::edwards::CompressedEdwardsY;
 use hex::FromHex;
@@ -40,7 +47,7 @@ fn main() {
 fn gen_test_inputs() -> Vec<(Vec<u8>, [u8; 32], [u8; 64])> {
     let msg = "74657374206d65737361676520666f722065646765206361736520766572696669636174696f6e";
     let msg = Vec::from_hex(msg).expect("invalid hex message");
-    // message|signature|pubkey
+    // signature|pubkey
     const INP1: &str = "01000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000|edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f";
     const INP2: &str = "5f5da7b0ec7d4e0271f5274526b55a9fb5c52e8c258a82e038bc89e0d77b7d76f4de58846e691a780aa20c3b6105a7c336ae89e8f96e35a31176d5bebb9d350f|0100000000000000000000000000000000000000000000000000000000000080";
     const INP3: &str = "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f0000000000000000000000000000000000000000000000000000000000000000|ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
