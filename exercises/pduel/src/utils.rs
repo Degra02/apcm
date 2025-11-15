@@ -1,13 +1,12 @@
 use std::array::TryFromSliceError;
 
-
 #[derive(Debug)]
 pub enum CustomError {
     InvalidSignature,
     InvalidPublicKey,
     DecompressionError,
     NonCanonicalS,
-    Other(String)
+    Other(String),
 }
 
 impl From<TryFromSliceError> for CustomError {
@@ -15,4 +14,3 @@ impl From<TryFromSliceError> for CustomError {
         Self::InvalidSignature
     }
 }
-

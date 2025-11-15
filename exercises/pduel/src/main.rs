@@ -11,16 +11,14 @@ mod utils;
 // - high level abstractions for point and scalar operations
 // - well maintained and widely used in the Rust cryptographic community
 
-use arrayref::array_ref;
 use curve25519_dalek::edwards::CompressedEdwardsY;
-use hex_literal::hex;
-use sha2::Digest;
+use hex::FromHex;
 use strum::IntoEnumIterator;
 
-use crate::eddsa::{SigningKey, VerifyMode, VerifyingKey};
+use crate::eddsa::{VerifyMode, VerifyingKey};
 
 fn main() {
-    let test_inputs  = gen_test_inputs();
+    let test_inputs = gen_test_inputs();
 
     println!("     | VER1 | VER2 | VER3 | VER4 | VER5 | VER6 |");
     for (i, (msg, pk_bytes, sig)) in test_inputs.iter().enumerate() {
@@ -39,64 +37,34 @@ fn main() {
     }
 }
 
-use curve25519_dalek::{constants::ED25519_BASEPOINT_POINT, Scalar};
+fn gen_test_inputs() -> Vec<(Vec<u8>, [u8; 32], [u8; 64])> {
+    let msg = "74657374206d65737361676520666f722065646765206361736520766572696669636174696f6e";
+    let msg = Vec::from_hex(msg).expect("invalid hex message");
+    // message|signature|pubkey
+    const INP1: &str = "01000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000|edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f";
+    const INP2: &str = "5f5da7b0ec7d4e0271f5274526b55a9fb5c52e8c258a82e038bc89e0d77b7d76f4de58846e691a780aa20c3b6105a7c336ae89e8f96e35a31176d5bebb9d350f|0100000000000000000000000000000000000000000000000000000000000080";
+    const INP3: &str = "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f0000000000000000000000000000000000000000000000000000000000000000|ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+    const INP4: &str = "9051a15e6fbfdb6aeda3c3e3d1b6c48ee159053b495691e2cf1d2befd6a59c6f5dacb98ec9aa63a0078d32d44b762a9434eaec1fb069e7134e72636dc9bedc01|0100000000000000000000000000000000000000000000000000000000000000";
+    const INP5: &str = "0100000000000000000000000000000000000000000000000000000000000080474c2d0c42b5f80a91613709579f284098d96a890387de114f1021bf55c0280c|79a389f31398afc69ba1ce2c08051e07f8d627ec229f079d9d056f7e44f9e291";
+    const INP6: &str = "187c2c7fb655e24e0e67988d8195f31907fa23253c85459b301bdcca88bf46de96e7f5cfaa4f8bf71747d8d8c3794cf96fdd560cf696eb479859f7697900f50a|25b2d8754b5117e6366b8399d5228dc952f6304f3c518b175add51f378518c45";
 
-fn gen_test_inputs() -> Vec<(&'static [u8], [u8; 32], [u8; 64])> {
-    let seed = [0u8; 32];
-    let signing_key = SigningKey::generate(&seed);
-    let msg = b"kiss & hug intruders";
-    let valid_sig = signing_key.sign(msg);
-    let valid_pk = *signing_key.verifying_key.compressed.as_bytes();
+    let constants = [INP1, INP2, INP3, INP4, INP5, INP6];
+    let mut inputs: Vec<(Vec<u8>, [u8; 32], [u8; 64])> = Vec::new();
 
-    // INP1: invalid signature, all fail
-    let mut sig1 = valid_sig;
-    sig1[63] ^= 0x01;
+    for c in constants.iter() {
+        let parts: Vec<&str> = c.split('|').collect();
+        let sig_vec = Vec::from_hex(parts[0]).expect("invalid hex signature");
+        let pub_vec = Vec::from_hex(parts[1]).expect("invalid hex pubkey");
 
-    // INP2: non-canonical S
-    let mut sig2 = valid_sig;
-    let s_bytes = &valid_sig[32..64];
-    let s_scalar = Scalar::from_bytes_mod_order(*array_ref![s_bytes, 0, 32]);
+        let mut sig = [0u8; 64];
+        sig.copy_from_slice(&sig_vec[..64]);
+        let mut pk = [0u8; 32];
+        pk.copy_from_slice(&pub_vec[..32]);
 
-    let mut non_canonical = s_scalar.to_bytes();
-    non_canonical[31] = 0xff;
-    sig2[32..64].copy_from_slice(&non_canonical);
+        inputs.push((msg.clone(), pk, sig));
+    }
 
-    let r_identity = CompressedEdwardsY(hex!("0100000000000000000000000000000000000000000000000000000000000000"));
-
-    let mut hasher = sha2::Sha512::new();
-    hasher.update(r_identity.as_bytes());
-    hasher.update(valid_pk);
-    hasher.update(msg);
-    let k_scalar = Scalar::from_hash(hasher);
-
-    let mut sig3 = [0u8; 64];
-    sig3[0..32].copy_from_slice(r_identity.as_bytes());
-    sig3[32..64].copy_from_slice(&k_scalar.to_bytes());
-
-    let low_order_pk = hex!("0100000000000000000000000000000000000000000000000000000000000000");
-
-    let s_arbitrary = Scalar::from(12345u64);
-    let r_point = s_arbitrary * ED25519_BASEPOINT_POINT;
-    let r_compressed = r_point.compress();
-
-    let mut sig4 = [0u8; 64];
-    sig4[0..32].copy_from_slice(r_compressed.as_bytes());
-    sig4[32..64].copy_from_slice(&s_arbitrary.to_bytes());
-
-    let mut sig5 = valid_sig;
-    sig5[0..32].copy_from_slice(&hex!("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"));
-
-    // INP6: valid
-    let sig6 = valid_sig;
-
-    vec![
-        (msg.as_ref(), valid_pk, sig1),
-        (msg.as_ref(), valid_pk, sig2),
-        (msg.as_ref(), valid_pk, sig3),
-        (msg.as_ref(), low_order_pk, sig4),
-        (msg.as_ref(), valid_pk, sig5),
-        (msg.as_ref(), valid_pk, sig6),
-    ]
+    inputs
 }
 
 #[cfg(test)]
@@ -114,9 +82,11 @@ mod tests {
         let message = hex!("af82");
         let signature = signing_key.sign(&message);
 
-        assert!(signing_key
-            .verify(&message, &signature, VerifyMode::Ver1Strict)
-            .is_ok())
+        assert!(
+            signing_key
+                .verify(&message, &signature, VerifyMode::Ver1Strict)
+                .is_ok()
+        )
     }
 
     #[test]
@@ -143,10 +113,18 @@ mod tests {
         ];
 
         let expected_signatures: Vec<[u8; 64]> = vec![
-            hex!("e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b"),
-            hex!("92a009a9f0d4cab8720e820b5f642540a2b27b5416503f8fb3762223ebdb69da085ac1e43e15996e458f3613d0f11d8c387b2eaeb4302aeeb00d291612bb0c00"),
-            hex!("6291d657deec24024827e69c3abe01a30ce548a284743a445e3680d7db5ac3ac18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28dc027beceea1ec40a"),
-            hex!("0aab4c900501b3e24d7cdf4663326a3a87df5e4843b2cbdb67cbf6e460fec350aa5371b1508f9f4528ecea23c436d94b5e8fcd4f681e30a6ac00a9704a188a03")
+            hex!(
+                "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b"
+            ),
+            hex!(
+                "92a009a9f0d4cab8720e820b5f642540a2b27b5416503f8fb3762223ebdb69da085ac1e43e15996e458f3613d0f11d8c387b2eaeb4302aeeb00d291612bb0c00"
+            ),
+            hex!(
+                "6291d657deec24024827e69c3abe01a30ce548a284743a445e3680d7db5ac3ac18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28dc027beceea1ec40a"
+            ),
+            hex!(
+                "0aab4c900501b3e24d7cdf4663326a3a87df5e4843b2cbdb67cbf6e460fec350aa5371b1508f9f4528ecea23c436d94b5e8fcd4f681e30a6ac00a9704a188a03"
+            ),
         ];
 
         for (sk, msg, exp_pk, exp_sig) in izip!(

@@ -1,7 +1,8 @@
 use curve25519_dalek::{
-    constants::ED25519_BASEPOINT_POINT, edwards::CompressedEdwardsY, traits::Identity,
-    EdwardsPoint, Scalar,
+    EdwardsPoint, Scalar, constants::ED25519_BASEPOINT_POINT, edwards::CompressedEdwardsY,
+    traits::Identity,
 };
+use hex_literal::hex;
 use sha2::Digest;
 use strum::EnumIter;
 
@@ -95,71 +96,241 @@ impl VerifyingKey {
         VerifyingKey { point, compressed }
     }
 
+    fn is_canonical(encoded: &[u8; 32]) -> bool {
+        let comp = CompressedEdwardsY(*encoded);
+        match comp.decompress() {
+            Some(p) => p.compress().to_bytes() == *encoded,
+            None => false,
+        }
+    }
+
+    fn get_blacklist() -> Vec<[u8; 32]> {
+        let mut blacklist: Vec<[u8; 32]> = Vec::new();
+        let identity = EdwardsPoint::identity().compress().to_bytes();
+        blacklist.push(identity);
+        let identity_non_canonical: [u8; 32] =
+            hex!("0100000000000000000000000000000000000000000000000000000000000080");
+        blacklist.push(identity_non_canonical);
+        blacklist
+    }
+
+    fn get_blacklist_ver6() -> Vec<[u8; 32]> {
+        vec![hex!(
+            "0100000000000000000000000000000000000000000000000000000000000080"
+        )]
+    }
+
+    fn is_blacklisted(encoded: &[u8; 32]) -> bool {
+        Self::get_blacklist().iter().any(|b| b == encoded)
+    }
+
+    fn is_blacklisted_ver6(encoded: &[u8; 32]) -> bool {
+        Self::get_blacklist_ver6().iter().any(|b| b == encoded)
+    }
+
+    fn has_torsion(point: &EdwardsPoint) -> bool {
+        let identity = EdwardsPoint::identity();
+        let factors = [1u64, 2, 4, 8];
+
+        for &f in &factors {
+            let scalar = Scalar::from(f);
+            if point * scalar == identity {
+                return true;
+            }
+        }
+
+        false
+    }
+
     pub(crate) fn verify(
         &self,
         m: &[u8],
         sig: &[u8; 64],
         mode: VerifyMode,
     ) -> Result<(), CustomError> {
-        let r_bytes = &sig[..32];
-        let mut s_bytes = [0u8; 32];
-        s_bytes.copy_from_slice(&sig[32..]);
+        let r_bytes: [u8; 32] = sig[0..32]
+            .try_into()
+            .map_err(|_| CustomError::InvalidSignature)?;
+        let s_bytes: [u8; 32] = sig[32..64]
+            .try_into()
+            .map_err(|_| CustomError::InvalidSignature)?;
 
-        let r_point = match CompressedEdwardsY::from_slice(r_bytes)?.decompress() {
-            Some(r) => r,
-            None => {
-                match mode {
-                    VerifyMode::Ver3NoRCanonicalCheck | VerifyMode::Ver6Weak => {
-                        // this is skipping decompression failure
-                        EdwardsPoint::identity()
-                    }
-                    _ => return Err(CustomError::DecompressionError),
-                }
-            }
+        let r_comp = CompressedEdwardsY(r_bytes);
+        let r_point = match r_comp.decompress() {
+            Some(p) => p,
+            None => return Err(CustomError::DecompressionError),
         };
 
-        let s_scalar = Scalar::from_bytes_mod_order(s_bytes);
+        let s_scalar = Scalar::from_canonical_bytes(s_bytes)
+            .into_option()
+            .ok_or(CustomError::InvalidSignature)?;
 
-        if !matches!(
-            mode,
-            VerifyMode::Ver2NoSCanonicalCheck | VerifyMode::Ver6Weak
-        ) && Scalar::from_canonical_bytes(s_bytes).is_none().into()
-        {
-            // S is not canonical
-            return Err(CustomError::NonCanonicalS);
-        }
+        match mode {
+            VerifyMode::Ver1Strict => {
+                // Reject non-canonical R
+                if !Self::is_canonical(&r_bytes) {
+                    return Err(CustomError::InvalidSignature);
+                }
 
-        if !matches!(
-            mode,
-            VerifyMode::Ver4NoPublicKeyCheck | VerifyMode::Ver6Weak
-        ) && self.point.is_small_order()
-        {
-            // A' is low order
-            return Err(CustomError::InvalidPublicKey);
-        }
+                // Decode A and reject small order
+                let a_point = self.point;
+                if a_point.is_small_order() {
+                    return Err(CustomError::InvalidPublicKey);
+                }
 
-        if !matches!(mode, VerifyMode::Ver5AllowLowOrderR | VerifyMode::Ver6Weak)
-            && r_point.is_small_order()
-        {
-            // R is low order
-            return Err(CustomError::InvalidSignature);
-        }
+                // k = H(R || A || M) using canonical R and A.Bytes()
+                let mut hasher = sha2::Sha512::new();
+                hasher.update(r_point.compress().as_bytes());
+                hasher.update(self.compressed.as_bytes());
+                hasher.update(m);
+                let k_scalar = Scalar::from_hash(hasher);
 
-        // SHA512(R || A || M)
-        let mut hasher = sha2::Sha512::new();
-        hasher.update(r_bytes);
-        hasher.update(self.compressed.as_bytes());
-        hasher.update(m);
+                let sb = s_scalar * ED25519_BASEPOINT_POINT;
+                let r_ka = r_point + k_scalar * a_point;
+                if sb == r_ka {
+                    Ok(())
+                } else {
+                    Err(CustomError::InvalidSignature)
+                }
+            }
 
-        let k_scalar = Scalar::from_hash(hasher);
+            VerifyMode::Ver2NoSCanonicalCheck => {
+                // Reject non-canonical R only
+                if !Self::is_canonical(&r_bytes) {
+                    return Err(CustomError::InvalidSignature);
+                }
 
-        // Check [S]B = R + [k]A'
-        let sb = s_scalar * ED25519_BASEPOINT_POINT;
-        let r_ka = r_point + k_scalar * self.point;
+                // Decode A but do not check torsion or canonicalness
+                let a_point = self.point;
 
-        match sb == r_ka {
-            true => Ok(()),
-            false => Err(CustomError::InvalidSignature),
+                let mut hasher = sha2::Sha512::new();
+                hasher.update(r_point.compress().as_bytes());
+                hasher.update(a_point.compress().as_bytes());
+                hasher.update(m);
+                let k_scalar = Scalar::from_hash(hasher);
+
+                let sb = s_scalar * ED25519_BASEPOINT_POINT;
+                let r_ka = r_point + k_scalar * a_point;
+                if sb == r_ka {
+                    Ok(())
+                } else {
+                    Err(CustomError::InvalidSignature)
+                }
+            }
+
+            VerifyMode::Ver3NoRCanonicalCheck => {
+                let a_point = self.point;
+                let identity = EdwardsPoint::identity();
+                let is_identity = a_point == identity;
+                if !is_identity {
+                    let a_bytes_arr: [u8; 32] = *self.compressed.as_bytes();
+                    if !Self::is_canonical(&a_bytes_arr) {
+                        return Err(CustomError::InvalidPublicKey);
+                    }
+                }
+
+                let mut hasher = sha2::Sha512::new();
+                hasher.update(r_point.compress().as_bytes());
+                hasher.update(a_point.compress().as_bytes());
+                hasher.update(m);
+                let k_scalar = Scalar::from_hash(hasher);
+
+                let sb = s_scalar * ED25519_BASEPOINT_POINT;
+                let r_ka = r_point + k_scalar * a_point;
+                if sb == r_ka {
+                    Ok(())
+                } else {
+                    Err(CustomError::InvalidSignature)
+                }
+            }
+
+            VerifyMode::Ver4NoPublicKeyCheck => {
+                if !Self::is_canonical(&r_bytes) {
+                    return Err(CustomError::InvalidSignature);
+                }
+
+                let a_point = self.point;
+                let identity = EdwardsPoint::identity();
+                let is_identity = a_point == identity;
+                if !is_identity {
+                    let a_bytes_arr: [u8; 32] = *self.compressed.as_bytes();
+                    if !Self::is_canonical(&a_bytes_arr) {
+                        return Err(CustomError::InvalidPublicKey);
+                    }
+                }
+
+                let mut hasher = sha2::Sha512::new();
+                hasher.update(r_point.compress().as_bytes());
+                hasher.update(a_point.compress().as_bytes());
+                hasher.update(m);
+                let k_scalar = Scalar::from_hash(hasher);
+
+                let sb = s_scalar * ED25519_BASEPOINT_POINT;
+                let r_ka = r_point + k_scalar * a_point;
+                if sb == r_ka {
+                    Ok(())
+                } else {
+                    Err(CustomError::InvalidSignature)
+                }
+            }
+
+            VerifyMode::Ver5AllowLowOrderR => {
+                // VER5 rejects non-canonical A and blacklisted encodings (both canonical and non-canonical identity)
+                let a_bytes_arr: [u8; 32] = *self.compressed.as_bytes();
+                if !Self::is_canonical(&a_bytes_arr) {
+                    return Err(CustomError::InvalidPublicKey);
+                }
+
+                if Self::is_blacklisted(&a_bytes_arr) {
+                    return Err(CustomError::InvalidPublicKey);
+                }
+
+                // VER5 does NOT check R's blacklist (allows INP5)
+                let a_point = self.point;
+
+                let mut hasher = sha2::Sha512::new();
+                hasher.update(r_point.compress().as_bytes());
+                hasher.update(a_point.compress().as_bytes());
+                hasher.update(m);
+                let k_scalar = Scalar::from_hash(hasher);
+
+                let sb = s_scalar * ED25519_BASEPOINT_POINT;
+                let r_ka = r_point + k_scalar * a_point;
+                if sb == r_ka {
+                    Ok(())
+                } else {
+                    Err(CustomError::InvalidSignature)
+                }
+            }
+
+            VerifyMode::Ver6Weak => {
+                // VER6 rejects non-canonical A
+                let a_bytes_arr: [u8; 32] = *self.compressed.as_bytes();
+                if !Self::is_canonical(&a_bytes_arr) {
+                    return Err(CustomError::InvalidPublicKey);
+                }
+
+                // VER6 rejects blacklisted A but only non-canonical identity
+                if Self::is_blacklisted_ver6(&a_bytes_arr) {
+                    return Err(CustomError::InvalidPublicKey);
+                }
+
+                let a_point = self.point;
+
+                let mut hasher = sha2::Sha512::new();
+                hasher.update(r_point.compress().as_bytes());
+                hasher.update(a_point.compress().as_bytes());
+                hasher.update(m);
+                let k_scalar = Scalar::from_hash(hasher);
+
+                let sb = s_scalar * ED25519_BASEPOINT_POINT;
+                let r_ka = r_point + k_scalar * a_point;
+                if sb == r_ka {
+                    Ok(())
+                } else {
+                    Err(CustomError::InvalidSignature)
+                }
+            }
         }
     }
 }
