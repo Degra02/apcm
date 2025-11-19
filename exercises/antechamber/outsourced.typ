@@ -39,7 +39,7 @@ The server, while providing storage and computational resources, is considered s
 )
 
 
-#show: frame-style(styles.boxy)
+#show: frame-style(styles.hint)
 
 == Security Requirements
 In this section, we outline the security requirements for the outsourced sensitive database system, focusing on confidentiality, privacy, integrity, and threat mitigation.
@@ -148,4 +148,57 @@ is resource constrained.
 
 
 == Non-Functional Requirements
+
+#counter(figure.where(kind: "frame")).update(0)
+#let (nfr,) = frames(
+  nfr: ("NFR", rgb("dbe7d8")),
+)
+
+=== Performance
+#nfr[Low Client Overhead][
+Client operations must be computationally lightweight due to limited resources.
+]
+
+#nfr[Efficient Search][
+Search latency must remain practical even for large datasets.
+]
+
+#nfr[Efficient Updates][
+Adding or deleting documents should not require rebuilding entire encrypted indexes.
+]
+
+=== Scalability
+#nfr[Scalable Storage][
+The solution must support large-scale datasets (e.g., millions of documents).
+]
+#nfr[Distributed Deployment][
+The server-side components should support distributed cloud infrastructure without breaking security guarantees.
+]
+
+=== Usability
+#nfr[Transparent Client Experience][
+Search and update operations should appear seamless to the client user.
+]
+#nfr[Minimal Manual Key Management][
+The system should automate as much of the cryptographic key management as possible.
+]
+
+=== Reliability & Availability
+#nfr[High Availability][
+The cloud service must maintain uptime for search and update requests.
+]
+#nfr[Resilience to Server Failure][
+Encrypted data should survive server migrations or failures without requiring re-encryption by the client.
+]
+
+=== Compliance & Governance
+#nfr[GDPR-compliant Deletion][
+Deletion must make documents irrecoverable (cryptographic erasure).
+]
+#nfr[Audit Logging][
+The system should log access, updates, and cryptographic operations in a privacy-preserving format.
+]
+#nfr[Regulatory Compliance][
+The architecture must comply with data protection regulations depending on deployment (HIPAA, GDPR, etc.).
+]
 

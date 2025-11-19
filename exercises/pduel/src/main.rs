@@ -42,6 +42,8 @@ fn main() {
         }
         println!();
     }
+
+    let a = Vec::new();
 }
 
 fn gen_test_inputs() -> Vec<(Vec<u8>, [u8; 32], [u8; 64])> {
