@@ -62,7 +62,7 @@ Metadata such as keyword-document relations must also be encrypted or obfuscated
 
 === Forward & Backward Privacy
 #sr[Forward Privacy][
-Newly added documents must not be linkable to past queries—i.e., after a keyword has been searched, the server cannot infer that a newly added document contains that keyword.
+Newly added documents must not be linkable to past queries, i.e., after a keyword has been searched, the server cannot infer that a newly added document contains that keyword.
 ]
 
 #sr[Backward Privacy][
@@ -74,7 +74,7 @@ After deleting a document, the server should not be able to return it in future 
 The server should not be able to determine whether two search tokens correspond to the same keyword.
 ]
 #sr[Access Pattern Privacy][
-The server should not learn which documents match a query (requires ORAM or PIR if desired).
+The server should not learn which documents match a query.
 ]
 #sr[Update Pattern Privacy][
 The server must not be able to link updates (new documents, deletions) to past queries.
@@ -82,7 +82,7 @@ The server must not be able to link updates (new documents, deletions) to past q
 
 === Integrity & Freshness
 #sr[Integrity of Search Results][
-The server must not omit or alter returned encrypted documents; the client must be able to verify correctness (e.g., via MACs or authenticated data structures).
+The server must not omit or alter returned encrypted documents. The client must be able to verify correctness (e.g. via MACs or authenticated data structures).
 ]
 #sr[Index Integrity][
 Any tampering with the encrypted index must be detectable.
@@ -96,22 +96,21 @@ Returned results must reflect the most recent updates (no replay of outdated sea
 Only the legitimate client may upload documents, perform searches, or request updates.
 ]
 #sr[Secure Client–Server Communication][
-All communication must use secure channels (TLS), despite encryption at rest.
+All communication must use secure channels, despite encryption of data at rest.
 ]
 
 === Threat Mitigation
 #sr[Resistance to Traffic Analysis][
 The system should minimize information leakage through message size, timing, or frequency.
 ]
-#sr[Compromise Containment][
-If the client device is compromised, the attacker should not be able to derive the plaintext or reveal past queries (e.g., key rotation or forward-secure key updates).
+#sr[Compromise Resilience][
+If the client device is compromised, the attacker should not be able to derive the plaintext or reveal past queries (e.g. key rotation or forward-secure key updates).
 ]
 
 
 == Functional Requirements
 
 #update()
-
 
 In this section, we outline the functional requirements for the outsourced sensitive database system.
 
@@ -129,7 +128,7 @@ The client must be able to delete previously outsourced documents in a way that 
 ]
 
 #fr[Search Capability][
-The client must be able to issue search queries (via encrypted search tokens) for specific keywords.
+The client must be able to issue search queries for specific keywords.
 ]
 
 #fr[Result Retrieval][
@@ -141,7 +140,7 @@ The server must maintain an encrypted index that supports efficient search and u
 ]
 
 #fr[Lightweight Client Operations][
-Most computation (e.g., index management, filtering) should occur server-side because the client device
+Most computation (e.g. index management, filtering) should occur server-side because the client device
 is resource constrained.
 ]
 
@@ -155,28 +154,26 @@ is resource constrained.
 #nfr[Low Client Overhead][
 Client operations must be computationally lightweight due to limited resources.
 ]
-
 #nfr[Efficient Search][
 Search latency must remain practical even for large datasets.
 ]
-
 #nfr[Efficient Updates][
 Adding or deleting documents should not require rebuilding entire encrypted indexes.
 ]
 
 === Scalability
 #nfr[Scalable Storage][
-The solution must support large-scale datasets (e.g., millions of documents).
+The solution must support large-scale datasets.
 ]
 #nfr[Distributed Deployment][
 The server-side components should support distributed cloud infrastructure without breaking security guarantees.
 ]
 
 === Usability
-#nfr[Transparent Client Experience][
+#nfr[Seamless Client Experience][
 Search and update operations should appear seamless to the client user.
 ]
-#nfr[Minimal Manual Key Management][
+#nfr[Minimal Management][
 The system should automate as much of the cryptographic key management as possible.
 ]
 
