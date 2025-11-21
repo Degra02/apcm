@@ -19,6 +19,13 @@
 #outline()
 #pagebreak()
 
+= Description
+Consider a university scenario where a professor is collecting feedback from students to improve the course. On one hand, students may be reluctant to share honest opinions without guarantees of anonymity, on the other, the professor wants to consider the opinions of only the students enrolled in the course.
+A similar scenario can be applied in a workplace where a manager seeks honest feedback from employees. The goal is to ensure that employees feel confident in their anonymity, allowing them to freely express their opinions without fear of reprisal, but still allow the manager to verify that the feedback is genuinely coming from the employees.
+An extra feature required is fairness in the submissions: to avoid that the opinion of a very vocal few unduly seems widespread, it should be possible to determine whether two messages were originated by the same entity. This feature would in fact allow for detecting multiple feedback submissions from the same individual.
+
+= Requirements
+
 #let (sr, fr, nfr,) = frames(
   sr: ("SR", rgb("c8d6e5")),
   fr: ("FR", rgb("d3cbd8")),
@@ -28,13 +35,161 @@
 
 #show: frame-style(styles.hint)
 
-= Description
-
-= Requirements
 == Security Requirements
+In this section, we outline the security requirements for the anonymous-but-verifiable feedback system, focusing on anonymity, authenticity, fairness, integrity, and privacy.
+
+=== Anonymity & Privacy
+
+#sr[Anonymity Guarantee][
+The system must ensure that individual student or employee identities cannot be linked to specific feedback submissions.
+]
+
+#sr[Unlinkability of Messages][
+Apart from controlled fairness mechanisms, submissions must not be linkable to an identity or to other metadata that could reveal the originator.
+]
+
+#sr[Submission Content Privacy][
+The contents of feedback messages must remain private and inaccessible to unauthorized parties, including system operators.
+]
+
+=== Authenticity & Access Control
+
+#sr[Verified Eligibility][
+Only authorized individuals (students enrolled in a course or employees of a workplace) may submit feedback.
+]
+
+#sr[Non-Transferable Authorization][
+Feedback credentials must be bound to an individual and not transferable to others.
+]
+
+#sr[Single-Submission Enforcement][
+The system must ensure that each individual can submit feedback at most once, unless the system explicitly allows multiple submissions.
+]
+
+=== Fairness & Duplicate Detection
+
+#sr[Pseudonymous Consistency][
+The system must allow determining whether two submissions come from the same entity without revealing the entity’s identity.
+]
+
+#sr[Duplicate Submission Detection][
+It must be possible to flag multiple submissions from the same individual while preserving their anonymity.
+]
+
+=== Integrity
+
+#sr[Message Integrity][
+Feedback submissions must not be modifiable in transit or on the server without detection.
+]
+
+#sr[Result Integrity][
+The professor or manager must be able to verify that collected feedback reflects genuine submissions from eligible individuals.
+]
+
+=== Threat Mitigation
+
+#sr[Resistance to Impersonation][
+Attackers must not be able to impersonate authorized individuals to submit feedback fraudulently.
+]
+
+#sr[Resistance to Deanonymization Attempts][
+The system must not leak identifying metadata through network traffic, timing signals, or platform behavior.
+]
+
+#sr[Secure Communication][
+All communication must occur over secure channels to prevent eavesdropping or tampering.
+]
+
 
 == Functional Requirements
+
 #update()
 
+In this section, we outline the functional requirements for the anonymous feedback system.
+
+#fr[Identity Verification][
+The system must verify an individual's enrollment or employment status before issuing a submission credential.
+]
+
+#fr[Anonymous Credential Issuance][
+The system must provide a way to issue credentials that authenticate eligibility while preserving anonymity.
+]
+
+#fr[Feedback Submission][
+Users must be able to submit feedback anonymously using the previously issued credential.
+]
+
+#fr[Pseudonym Generation][
+The system must generate pseudonyms or cryptographic tags that allow linking multiple submissions by the same individual while keeping identities hidden.
+]
+
+#fr[Duplicate Detection Mechanism][
+The system must detect multiple submissions from the same individual, enabling fairness enforcement.
+]
+
+#fr[Submission Validation][
+The server must validate that incoming submissions come from eligible users and have not been tampered with.
+]
+
+#fr[Feedback Aggregation][
+The system must aggregate feedback for the professor or manager in a way that preserves anonymity while ensuring authenticity.
+]
+
+
 == Non-Functional Requirements
+
 #update()
+
+=== Performance
+
+#nfr[Efficient Verification][
+Identity and credential verification should be fast and scalable to courses or workplaces with many participants.
+]
+
+#nfr[Low Submission Overhead][
+Feedback submission should require minimal computation and delay for users.
+]
+
+=== Scalability
+
+#nfr[Support for Large User Groups][
+The system must scale to thousands of students or employees without degrading performance.
+]
+
+#nfr[Efficient Pseudonym Handling][
+The system must maintain efficient operations even when generating and comparing pseudonyms for duplicate detection.
+]
+
+=== Usability
+
+#nfr[Simple User Experience][
+The submission process must be straightforward and accessible without requiring advanced technical knowledge.
+]
+
+#nfr[Transparent Privacy Guarantees][
+Users must be clearly informed that their anonymity is protected to encourage honest feedback.
+]
+
+=== Reliability & Availability
+
+#nfr[High Availability][
+Users must be able to submit feedback reliably within the designated time window.
+]
+
+#nfr[Fault Tolerance][
+Failures or server restarts must not affect previously issued credentials or submitted feedback.
+]
+
+=== Compliance & Governance
+
+#nfr[Data Minimization][
+The system must collect and store only the minimum necessary information for verification and aggregation.
+]
+
+#nfr[Regulatory Compliance][
+The system should comply with relevant privacy regulations (e.g., GDPR, FERPA) depending on the environment.
+]
+
+#nfr[Secure Data Retention Policies][
+Stored feedback must be protected and deleted according to institutional or regulatory requirements.
+]
