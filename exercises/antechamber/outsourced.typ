@@ -34,10 +34,12 @@ The server, while providing storage and computational resources, is considered s
 
 = Requirements
 
-#let (sr,) = frames(
+#let (sr, fr, nfr,) = frames(
   sr: ("SR", rgb("c8d6e5")),
+  fr: ("FR", rgb("d3cbd8")),
+  nfr: ("NFR", rgb("dbe7d8"))
 )
-
+#let update() = counter(figure.where(kind: "frame")).update(0)
 
 #show: frame-style(styles.hint)
 
@@ -108,10 +110,8 @@ If the client device is compromised, the attacker should not be able to derive t
 
 == Functional Requirements
 
-#counter(figure.where(kind: "frame")).update(0)
-#let (fr,) = frames(
-  fr: ("FR", rgb("d3cbd8")),
-)
+#update()
+
 
 In this section, we outline the functional requirements for the outsourced sensitive database system.
 
@@ -149,10 +149,7 @@ is resource constrained.
 
 == Non-Functional Requirements
 
-#counter(figure.where(kind: "frame")).update(0)
-#let (nfr,) = frames(
-  nfr: ("NFR", rgb("dbe7d8")),
-)
+#update()
 
 === Performance
 #nfr[Low Client Overhead][
