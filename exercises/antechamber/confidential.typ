@@ -36,16 +36,16 @@ An extra feature required is fairness in the submissions: to avoid that the opin
 #show: frame-style(styles.hint)
 
 == Security Requirements
-In this section, we outline the security requirements for the anonymous-but-verifiable feedback system, focusing on anonymity, authenticity, fairness, integrity, and privacy.
+In this section, we outline the security requirements for the anonymous but verifiable feedback system, focusing on anonymity, authenticity, fairness, integrity, and privacy.
 
 === Anonymity & Privacy
 
-#sr[Anonymity Guarantee][
+#sr[Anonymity][
 The system must ensure that individual student or employee identities cannot be linked to specific feedback submissions.
 ]
 
-#sr[Unlinkability of Messages][
-Apart from controlled fairness mechanisms, submissions must not be linkable to an identity or to other metadata that could reveal the originator.
+#sr[Unlinkability][
+Submissions must not be linkable to an identity or to other metadata that could reveal the originator (apart from fairness mechanisms).
 ]
 
 #sr[Submission Content Privacy][
@@ -54,26 +54,19 @@ The contents of feedback messages must remain private and inaccessible to unauth
 
 === Authenticity & Access Control
 
-#sr[Verified Eligibility][
-Only authorized individuals (students enrolled in a course or employees of a workplace) may submit feedback.
+#sr[Authorization][
+Only authorized individuals (e.g. students enrolled in a course or employees of a workplace) may submit feedback.
+Furthermore, feedback credentials must be bound to an individual and not transferable to others.
 ]
 
-#sr[Non-Transferable Authorization][
-Feedback credentials must be bound to an individual and not transferable to others.
-]
-
-#sr[Single-Submission Enforcement][
+#sr[Single Submission][
 The system must ensure that each individual can submit feedback at most once, unless the system explicitly allows multiple submissions.
 ]
 
 === Fairness & Duplicate Detection
 
-#sr[Pseudonymous Consistency][
-The system must allow determining whether two submissions come from the same entity without revealing the entity’s identity.
-]
-
 #sr[Duplicate Submission Detection][
-It must be possible to flag multiple submissions from the same individual while preserving their anonymity.
+The system must allow determining whether two submissions (if multiple submissions are enabled) come from the same entity without revealing the entity’s identity.
 ]
 
 === Integrity
@@ -92,7 +85,7 @@ The professor or manager must be able to verify that collected feedback reflects
 Attackers must not be able to impersonate authorized individuals to submit feedback fraudulently.
 ]
 
-#sr[Resistance to Deanonymization Attempts][
+#sr[Resistance to Deanonymization][
 The system must not leak identifying metadata through network traffic, timing signals, or platform behavior.
 ]
 
@@ -112,7 +105,7 @@ The system must verify an individual's enrollment or employment status before is
 ]
 
 #fr[Anonymous Credential Issuance][
-The system must provide a way to issue credentials that authenticate eligibility while preserving anonymity.
+The system must provide a way to issue credentials that authenticate users while preserving anonymity.
 ]
 
 #fr[Feedback Submission][
@@ -187,7 +180,7 @@ The system must collect and store only the minimum necessary information for ver
 ]
 
 #nfr[Regulatory Compliance][
-The system should comply with relevant privacy regulations (e.g., GDPR, FERPA) depending on the environment.
+The system should comply with relevant privacy regulations (e.g. GDPR) depending on the environment.
 ]
 
 #nfr[Secure Data Retention Policies][
