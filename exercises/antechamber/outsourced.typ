@@ -6,7 +6,7 @@
   "Advanced Programming of Cryptographic Methods",
   "Outsourced Sensitive Database",
   "Filippo De Grandi",
-  examination_day: "19/11/2025",
+  examination_day: "20/11/2025",
 )
 
 #let frame(stroke) = (x, y) => (
@@ -21,16 +21,13 @@
 
 = Description
 
-In the era of cloud computing and big data, the need for secure and efficient methods to search over cloud-hosted confidential data has become increasingly critical.
-The scenario involves a client-server model, where the client is a smart device (e.g., a smartphone or IoT device) with limited computational and storage resources, and the server is a cloud service provider.
-The client has sensitive data and wants to outsource it to the server. The client needs to perform search operations over this data without revealing the content of the queries or the data itself. In particular, the client must be able to:
+In this scenario, a client with limited computational resources (such as a smartphone or IoT device) wishes to outsource sensitive documents to a cloud server.
+The client must later search over these outsourced documents without revealing the content of either the data or the search queries.
 
-- Add new documents to the database on the server;
-- Search for keywords within the database and retrieve the relevant documents;
-- Maintain privacy by ensuring that the server cannot infer information about the client's data or queries, even when updates (additions or deletions) are performed.
+The server is honest-but-curious: it follows protocol but attempts to infer as much information as possible.
+The system must support secure document uploads, updates, deletions, and keyword searches while preventing the server from learning search patterns, access patterns, or update patterns.
 
-The server, while providing storage and computational resources, is considered semi-trusted. This means that the server is honest but curious, it will follow the protocol correctly but may attempt to learn as much as possible about the client's data and queries. For instance, the server should not link new updates to previous search queries or infer information about deleted documents.
-
+Strong privacy guarantees (including forward and backward privacy) and efficient handling of encrypted data are required despite the client’s limited capabilities.
 
 = Requirements
 

@@ -6,7 +6,7 @@
   "Advanced Programming of Cryptographic Methods",
   "Authentic Messages",
   "Filippo De Grandi",
-  examination_day: "19/11/2025",
+  examination_day: "23/11/2025",
 )
 
 #let frame(stroke) = (x, y) => (
@@ -18,6 +18,13 @@
 
 #outline()
 #pagebreak()
+
+= Description
+In this scenario a user communicates with a server via Terminal User Interfaces (TUIs).
+
+The user must register with the server and be able to send messages that cryptographically bind their identity to the message content. The server must verify both the authenticity of the sender and the integrity of each received message. It must also determine whether the user is already registered and manage key material in a quantum-resilient way.
+
+Because adversaries may possess quantum capabilities, the system must rely on post-quantum secure cryptographic algorithms for registration, key generation, signing, and verification.
 
 = Requirements
 
@@ -33,7 +40,7 @@
 == Security Requirements
 In this section, we outline the security requirements for the quantum-resistant identity-binding messaging system, focusing on post-quantum resilience, authenticity, integrity, and secure key management.
 
-=== Quantum-Resilient Confidentiality & Integrity
+=== Quantum Confidentiality & Integrity
 
 #sr[Post-Quantum Security][
 All cryptographic primitives must be secure against quantum-capable adversaries, including signature schemes, key-exchange mechanisms, and hashing algorithms.
@@ -146,16 +153,16 @@ The server must handle registration, key management, and message verification fo
 ]
 
 #nfr[Efficient TUI Interaction][
-Operations performed through TUIs must remain efficient and responsive even in high-load environments.
+Operations performed through TUIs must remain efficient and responsive.
 ]
 
 === Usability
 
-#nfr[Straightforward Registration][
-Users must be able to register and manage keys through a simple, understandable TUI workflow.
+#nfr[Registration][
+Users must be able to register and manage keys through a simple TUI workflow.
 ]
 
-#nfr[Clear Verification Feedback][
+#nfr[Verification Feedback][
 The system must clearly communicate success or failure conditions without exposing sensitive details.
 ]
 
@@ -175,10 +182,10 @@ Registration data and keys must be stored so they remain intact even in case of 
 The system must log registration and verification events securely without exposing sensitive cryptographic material.
 ]
 
-#nfr[Long-Term Security Compliance][
+#nfr[Security Compliance][
 Cryptographic choices must align with current and evolving post-quantum security standards and recommendations.
 ]
 
-#nfr[Key Lifecycle Policies][
+#nfr[Key Lifecycle][
 The system must support secure key rotation, expiration, and revocation in a quantum-resilient manner.
 ]

@@ -6,7 +6,7 @@
   "Advanced Programming of Cryptographic Methods",
   "Confidential But Genuine Feedback",
   "Filippo De Grandi",
-  examination_day: "19/11/2025",
+  examination_day: "21/11/2025",
 )
 
 #let frame(stroke) = (x, y) => (
@@ -20,9 +20,11 @@
 #pagebreak()
 
 = Description
-Consider a university scenario where a professor is collecting feedback from students to improve the course. On one hand, students may be reluctant to share honest opinions without guarantees of anonymity, on the other, the professor wants to consider the opinions of only the students enrolled in the course.
-A similar scenario can be applied in a workplace where a manager seeks honest feedback from employees. The goal is to ensure that employees feel confident in their anonymity, allowing them to freely express their opinions without fear of reprisal, but still allow the manager to verify that the feedback is genuinely coming from the employees.
-An extra feature required is fairness in the submissions: to avoid that the opinion of a very vocal few unduly seems widespread, it should be possible to determine whether two messages were originated by the same entity. This feature would in fact allow for detecting multiple feedback submissions from the same individual.
+A professor (or manager) collects feedback from students (or employees). Individuals must be free to express honest opinions while maintaining anonymity. At the same time, the professor or manager must verify that submissions come only from eligible participants.
+
+An additional fairness requirement mandates that the system must detect when multiple messages originate from the same person, without revealing the person's identity.
+
+The system must therefore support anonymous authentication, controlled pseudonymity and duplicate detection balancing privacy, authenticity, and fairness.
 
 = Requirements
 

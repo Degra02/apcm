@@ -85,9 +85,9 @@
     } else if students.len() == 2 and type(students.at(0)) != array and type(students.at(0)) in (content, str) and type(students.at(1)) == int {
       students = (students, )
     }
-    #if students.len() != 0 {
-      text(size: 13pt)[*Graduate Student#if students.len() == 1 [] else [s]*]
-    }
+    // #if students.len() != 0 {
+    //   text(size: 13pt)[*Graduate Student#if students.len() == 1 [] else [s]*]
+    // }
 
     // #students
 
