@@ -43,155 +43,43 @@ Because adversaries may possess quantum capabilities, the system must rely on po
 
 #show: frame-style(styles.hint)
 
-== Security Requirements
-In this section, we outline the security requirements for the quantum-resistant identity-binding messaging system, focusing on post-quantum resilience, authenticity, integrity, and secure key management.
+== Functional Requirements
+#update()
 
-=== Quantum Confidentiality & Integrity
-
-#sr[Post-Quantum Security][
-All cryptographic primitives must be secure against quantum-capable adversaries, including signature schemes, key-exchange mechanisms, and hashing algorithms.
+#fr[Registration][
+The user must be able to register to the server
 ]
+
+#fr[Message Sending][
+The user must be able to send a message
+]
+
+#fr[Message Receival][
+The server must receive messages from users
+]
+
+
+== Security Requirements
+#update()
 
 #sr[Message Integrity][
-Messages sent by the user must be protected so the server can detect any tampering during transmission.
+The server must verify that messages have not been altered in transit
 ]
 
-#sr[Identity Binding][
-Each secured message must be cryptographically bound to the user’s identity in a way that is resilient to both classical and quantum attacks.
+#sr[Quantum-level Security][
+Protection against quantum capable adversaries
 ]
 
-=== Authentication & Registration
-
-#sr[Authenticated Registration][
-The system must ensure that only legitimate users can register and obtain a valid key pair.
+#sr[Authentication][
+Authentication of users to the server
 ]
 
-#sr[Key Ownership Proof][
-Users must be able to prove ownership of the private key corresponding to their registered public key without revealing the private key.
-]
+#pagebreak()
 
-#sr[Secure Key Storage][
-Users and servers must securely store key material to prevent extraction by a quantum-enabled attacker.
-]
+= Technical Details
 
-=== Message Verification & Replay Protection
+== Architecture
+// Provide an overview of the architecture of your project, e.g., by detailing the modules involved.
 
-#sr[Sender Authenticity Verification][
-The server must verify that each message is signed by the user corresponding to the registered key pair.
-]
-
-#sr[Replay Attack Resistance][
-The system must detect and reject replayed valid messages to prevent malicious reuse.
-]
-
-#sr[Freshness Guarantees][
-Messages must include mechanisms (timestamps, counters, or nonces) ensuring they are recent and not reused.
-]
-
-=== Communication Security
-
-#sr[Secure Channel Establishment][
-The TUI communication must be secured against eavesdropping and man-in-the-middle attacks, using post-quantum secure protocols.
-]
-
-#sr[Metadata Protection][
-Communication metadata should be minimized to reduce risks of profiling by quantum-enabled adversaries.
-]
-
-
-== Functional Requirements
-
-#update()
-
-In this section, we outline the functional requirements for the identity-binding message system with post-quantum protections.
-
-#fr[User Registration][
-Users must be able to register with the server, creating or uploading a post-quantum secure public key.
-]
-
-#fr[Key Pair Generation][
-Users must be able to generate a post-quantum key pair compatible with the system’s signature requirements.
-]
-
-#fr[Message Creation][
-Users must be able to create messages that include both content and cryptographic bindings to their identity.
-]
-
-#fr[Message Signing][
-Users must be able to digitally sign messages using a post-quantum secure signature algorithm.
-]
-
-#fr[Message Transmission][
-Users must be able to send secured messages via the TUI for server verification.
-]
-
-#fr[Message Verification][
-The server must verify submitted messages by checking signature validity and verifying user registration.
-]
-
-#fr[Registration Lookup][
-Upon receiving a message, the server must determine whether the sender is already registered with an existing key pair.
-]
-
-#fr[Error Feedback][
-The system must notify users when registration fails, verification fails, or the message format is invalid.
-]
-
-
-== Non-Functional Requirements
-
-#update()
-
-=== Performance
-
-#nfr[Efficient Verification][
-The server must verify post-quantum signatures with acceptable latency, despite their larger size compared to classical schemes.
-]
-
-#nfr[Reasonable Key Sizes][
-Key generation and transmission must remain usable despite larger post-quantum key and signature sizes.
-]
-
-=== Scalability
-
-#nfr[Support for Many Users][
-The server must handle registration, key management, and message verification for a large number of users.
-]
-
-#nfr[Efficient TUI Interaction][
-Operations performed through TUIs must remain efficient and responsive.
-]
-
-=== Usability
-
-#nfr[Registration][
-Users must be able to register and manage keys through a simple TUI workflow.
-]
-
-#nfr[Verification Feedback][
-The system must clearly communicate success or failure conditions without exposing sensitive details.
-]
-
-=== Reliability & Availability
-
-#nfr[High Availability][
-Both message submission and verification services must remain available and robust against failures.
-]
-
-#nfr[Fault Tolerance][
-Registration data and keys must be stored so they remain intact even in case of server failures.
-]
-
-=== Compliance & Governance
-
-#nfr[Secure Audit Logging][
-The system must log registration and verification events securely without exposing sensitive cryptographic material.
-]
-
-#nfr[Security Compliance][
-Cryptographic choices must align with current and evolving post-quantum security standards and recommendations.
-]
-
-#nfr[Key Lifecycle][
-The system must support secure key rotation, expiration, and revocation in a quantum-resilient manner.
-]
+= Security Considerations
+// Provide security considerations regarding your project. There is no fixed structure for this section, just try to reason about the security of your project (e.g., by taking inspiration from the topics dealt with during the course and adapting them to your own work, or by explicitly considering a threat model such as Dolev-Yao). This way, we will be able to understand whether you master the topics that we have presented. Try to be exhaustive and consider (at least mention) security concerns when implementing or using cryptographic primitives.

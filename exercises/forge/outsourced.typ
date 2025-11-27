@@ -99,6 +99,8 @@ The queries must reveal as little information as possible
 The system must comply with local regulations for sensitive data.
 ]
 
+#pagebreak()
+
 = Technical Details
 
 == Architecture
