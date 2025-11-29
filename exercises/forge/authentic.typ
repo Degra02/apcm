@@ -76,10 +76,46 @@ Authentication of users to the server
 
 #pagebreak()
 
+
 = Technical Details
 
 == Architecture
-// Provide an overview of the architecture of your project, e.g., by detailing the modules involved.
 
-= Security Considerations
-// Provide security considerations regarding your project. There is no fixed structure for this section, just try to reason about the security of your project (e.g., by taking inspiration from the topics dealt with during the course and adapting them to your own work, or by explicitly considering a threat model such as Dolev-Yao). This way, we will be able to understand whether you master the topics that we have presented. Try to be exhaustive and consider (at least mention) security concerns when implementing or using cryptographic primitives.
+In this scenario, the system enables a user to register to a server and later send authenticated, integrity-protected messages through a TUI interface. Because adversaries may possess quantum capabilities, all long-term cryptographic guarantees must rely on post-quantum primitives.
+
+=== Components
+
+1. User Module:
+  - Generates a post-quantum key pair during registration (e.g. Dilithium @dilithium), securely storing the private key, and producing signed messages
+  - Interacts with the server through a TUI, ensuring that identity-binding messages are always signed locally.
+
++ Server Module:
+  - Stores user public keys and registration records.
+  - Verifies the signature against the stored public key
+  - Checks message integrity.
+  - Determines whether the sender is already registered. If registration is new, the server stores the submitted PQC public key.
+
++ Cryptographic Layer:
+  - Post-quantum–secure digital signatures for identity binding, along with PQC key-encapsulation or TLS 1.3 with hybrid PQC ciphersuites to secure the communication channel (e.g. Kyber @kyber).
+  - Simple message structure (header, content, signature) ensures integrity and authenticity.
+
+
+== Security Considerations
+
+=== Authentication
+  - Each user signs registration requests and messages using an EUF-CMA @euf-cma post-quantum signature scheme.
+  - The server verifies signatures to ensure the sender is genuine and that messages are bound to a specific registered identity.
+
+=== Integrity
+  - Since signatures cover the entire message, any modification by an attacker results in a failed verification. This protects both in-transit and stored messages.
+
+=== Confidentiality
+  - Communication is secured via a PQC-augmented channel (e.g. TLS with Kyber hybrid key exchange) preventing both classical and quantum MITM attackers from learning message contents.
+
+=== Resistance to Quantum Adversaries
+  - Long-term secrets (user keys, server-stored public keys, message signatures) rely on post-quantum primitives. Even if an attacker stores all traffic today, they cannot forge messages or break the confidentiality of communications in the future.
+
+=== Threat Model
+Even if the server is honest-but-curious, it only sees user public keys and signed messages, but cannot forge identities or alter messages undetected. Network attackers cannot impersonate users due to signature verification and cannot break the encrypted channel, even with quantum resources.
+
+#bibliography("references.yml")

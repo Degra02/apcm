@@ -122,7 +122,7 @@ The client (resource-limited device) performs all key-related and sensitive oper
   - Maintains access logs for auditing purposes.
 
 + Cryptographic Module:
-  - _Dynamic Searchable Symmetric Encryption_ (DSSE) scheme for secure document storage and search.
+  - _Dynamic Searchable Symmetric Encryption_ (DSSE) @sse scheme for secure document storage and search.
   - Forward-secure key update mechanism for forward privacy.
   - Authenticated data structure for integrity verification.
   - Secure communication protocols (TLS) for data in transit.
@@ -162,3 +162,6 @@ The system mitigates:
 - The server is honest-but-curious as it follows protocol but tries to infer patterns.
 - Even if the server stores all interactions, search tokens remain unlinkable due to the evolving trapdoor function.
 - Network attackers are mitigated via TLS and standard authenticated encryption.
+
+
+#bibliography("references.yml")

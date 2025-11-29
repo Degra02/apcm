@@ -1,0 +1,28 @@
+ring-sig:
+  type: Web
+  title: Ring signature
+  author: Wikipedia 
+  url: https://en.wikipedia.org/wiki/Ring_signature
+
+dilithium:
+  type: Web
+  title: CRYSTALS-Dilithium
+  author: CRYSTALS
+  url: https://pq-crystals.org/dilithium/
+
+kyber:
+  type: Web
+  title: Kyber
+  author: Wikipedia
+  url: https://en.wikipedia.org/wiki/Kyber
+
+euf-cma:
+  type: Web
+  title: Existential unforgeability under chosen message attacks
+  url: https://blog.cryptographyengineering.com/euf-cma-and-suf-cma/
+
+sse:
+  type: Web
+  title: Searchable Symmetric Encryption
+  author: Wikipedia
+  url: https://en.wikipedia.org/wiki/Searchable_symmetric_encryption
