@@ -105,7 +105,60 @@ The system must comply with local regulations for sensitive data.
 
 == Architecture
 // Provide an overview of the architecture of your project, e.g., by detailing the modules involved.
+The system follows a client-server model optimized for secure outsourced storage and search functionalities.
+The client (resource-limited device) performs all key-related and sensitive operations, while the cloud server stores encrypted data and executes search operations without learning their content.
+
+=== Components
+1. Client Module:
+  - Generates and stores cryptographic keys.
+  - Encrypts documents before uploading.
+  - Creates encrypted search tokens (trapdoors) for querying.
+  - Verifies search results returned by the server.
+
++ Server Module:
+  - Stores encrypted documents and an encrypted index.
+  - Processes search queries using trapdoors.
+  - Returns encrypted search results to the client.
+  - Maintains access logs for auditing purposes.
+
++ Cryptographic Module:
+  - _Dynamic Searchable Symmetric Encryption_ (DSSE) scheme for secure document storage and search.
+  - Forward-secure key update mechanism for forward privacy.
+  - Authenticated data structure for integrity verification.
+  - Secure communication protocols (TLS) for data in transit.
+
+=== Workflow
+1. Upload: Client encrypts a document + keyword associations → sends ciphertext + encrypted index entries.
++ Search: Client sends trapdoor for a keyword → server performs encrypted lookup → returns encrypted matches.
++ Deletion: Client sends a deletion token referencing encrypted index entries → server removes them.
++ Integrity Check: Returned results include MACs or path proofs which the client verifies.
+
 
 = Security Considerations
 // Provide security considerations regarding your project. There is no fixed structure for this section, just try to reason about the security of your project (e.g., by taking inspiration from the topics dealt with during the course and adapting them to your own work, or by explicitly considering a threat model such as Dolev-Yao). This way, we will be able to understand whether you master the topics that we have presented. Try to be exhaustive and consider (at least mention) security concerns when implementing or using cryptographic primitives.
 
+=== Confidentiality & Privacy
+- DSSE ensures the server learns only minimal leakage.
+- Forward privacy: New document additions cannot be linked to past queries because trapdoor keys evolve.
+- Backward privacy: Deleted documents cannot be returned in future searches.
+- Encrypted index: Keyword–document associations remain hidden.
+
+=== Integrity & Authenticity
+- MACs or Merkle proofs ensure the server cannot forge or alter documents.
+- Authenticated channels (TLS + client keys) enforce secure communication.
+- The client verifies integrity of results, protecting against server tampering.
+
+=== Access Control
+- Each client uses a unique key. The server cannot decrypt documents or impersonate users.
+- Only the legitimate client can generate valid search tokens or upload/delete entries.
+
+=== Leaks Reduction
+The system mitigates:
+- Search pattern leakage using probabilistic trapdoors.
+- Access pattern leakage via randomized structures.
+- Update pattern leakage by unlinking update tokens.
+
+=== Threat Model
+- The server is honest-but-curious as it follows protocol but tries to infer patterns.
+- Even if the server stores all interactions, search tokens remain unlinkable due to the evolving trapdoor function.
+- Network attackers are mitigated via TLS and standard authenticated encryption.
